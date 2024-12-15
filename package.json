@@ -1,8 +1,8 @@
 {
-  "name": "wxt-react-starter",
-  "description": "manifest.json description",
+  "name": "QuickPeek - Spotlight & Alfred like Search but for Browsers",
+  "description": "Spotlight and Alfred like Search for Browsers",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "wxt",
