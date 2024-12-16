@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Command, CommandInput } from "./ui/command";
 import { ScrollArea } from "./ui/scroll-area";
 import TrialRemaining from "./TrialRemaining";
+import RowSkeleton from "./RowSkeleton";
 
 interface SpotlightSearchProps {
   onClose: () => void;
@@ -35,6 +36,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
   );
   const [hasArrowKeyPressed, setHasArrowKeyPressed] = useState(false);
   const resultsRef = useRef<HTMLDivElement>(null);
+  const selectedItemRef = useRef<HTMLDivElement>(null);
 
   const isValidUrl = useCallback((string: string): boolean => {
     const urlRegex =
@@ -330,6 +332,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
       return (
         <div
           key={item.id}
+          ref={index === selectedItemIndex ? selectedItemRef : null}
           className={`flex items-center p-2 rounded-lg border cursor-pointer ${
             index === selectedItemIndex && hasArrowKeyPressed
               ? "bg-green-200 border-green-300"
@@ -355,9 +358,17 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
     });
   };
 
+  useEffect(() => {
+    if (selectedItemRef.current) {
+      selectedItemRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    }
+  }, [selectedItemIndex]);
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 w-full h-full bg-clip-padding backdrop-filter backdrop-blur-md bg-opacity-70 "
+      className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 w-screen h-screen bg-clip-padding backdrop-filter backdrop-blur-md bg-opacity-70 "
       onClick={onClose}
     >
       <div
@@ -394,7 +405,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
           <div className="sticky top-0 z-20 bg-white dark:bg-black border-b">
             <CommandInput
               placeholder="Search tabs, history, bookmarks, downloads, or enter a URL..."
-              className="h-16 px-1 border-none focus:ring-0"
+              className="h-16 px-1 border-none focus:ring-0 font-semibold text-base"
               value={input}
               onValueChange={setInput}
               onKeyDown={(e) => {
@@ -405,28 +416,21 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
           </div>
 
           {/* Results Section */}
+          {results && renderSectionTabs()}
           {results && !loading && (
-            <ScrollArea className="h-[300px]">
-              {renderSectionTabs()}
-              <div className="p-4 space-y-2">
+            <ScrollArea className="h-[300px] py-2" scrollHideDelay={0}>
+              <div className="p-2 space-y-2">
                 {renderResultItems()}
-
                 {renderResultItems().length === 0 && (
                   <div className="text-center text-gray-500">
                     No results found
                   </div>
                 )}
               </div>
+              {loading && <RowSkeleton count={4} />}
             </ScrollArea>
           )}
-
           {/* Loading State */}
-          {loading && (
-            <div className="flex items-center justify-center p-8 text-gray-500">
-              <div className="animate-spin inline-block w-6 h-6 border-2 border-current border-t-transparent rounded-full mr-2" />
-              <span>Loading...</span>
-            </div>
-          )}
         </Command>
       </div>
     </div>
