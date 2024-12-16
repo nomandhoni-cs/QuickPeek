@@ -98,7 +98,7 @@ export default defineBackground(() => {
           sendResponse(response);
         })
         .catch((error) => {
-          console.error("Error fetching data:", error);
+          // console.error("Error fetching data:", error);
           sendResponse(null);
         });
 
@@ -111,6 +111,16 @@ export default defineBackground(() => {
         browser.tabs.update(tabId, { active: true });
       } else if (tabAction === "close") {
         browser.tabs.remove(tabId);
+      }
+      return true;
+    }
+
+    if (message.action === "downloadAction") {
+      const { downloadId, downloadAction } = message;
+      if (downloadAction === "show") {
+        browser.downloads.show(downloadId);
+      } else if (downloadAction === "open") {
+        browser.downloads.open(downloadId);
       }
       return true;
     }
