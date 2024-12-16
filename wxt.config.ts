@@ -7,7 +7,7 @@ export default defineConfig({
   manifest: {
     name: "QuickPeek - Spotlight & Alfred like Search but for Browsers",
     description: "Spotlight and Alfred like Search for Browsers",
-    permissions: ["history", "bookmarks", "tabs", "downloads"],
+    permissions: ["storage", "history", "bookmarks", "tabs", "downloads"],
     host_permissions: ["<all_urls>"],
   },
 });

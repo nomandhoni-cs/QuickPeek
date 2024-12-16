@@ -19,6 +19,7 @@ a {
   color: #646cff;
   text-decoration: inherit;
 }
+
 a:hover {
   color: #535bf2;
 }
@@ -27,8 +28,8 @@ body {
   margin: 0;
   display: flex;
   place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  min-width: 400px;
+  min-height: 400px;
 }
 
 h1 {
@@ -47,9 +48,11 @@ button {
   cursor: pointer;
   transition: border-color 0.25s;
 }
+
 button:hover {
   border-color: #646cff;
 }
+
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
@@ -60,10 +63,61 @@ button:focus-visible {
     color: #213547;
     background-color: #ffffff;
   }
+
   a:hover {
     color: #747bff;
   }
+
   button {
     background-color: #f9f9f9;
   }
+}
+
+/* Specific Styles for App */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  background-color: var(--background-color);
+}
+
+.app-logo {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 8px;
+}
+
+.app-title {
+  font-size: 2.5rem;
+  color: var(--color);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.instruction {
+  text-align: center;
+  font-size: 1rem;
+  margin-bottom: 20px;
+}
+
+.highlight {
+  font-weight: bold;
+  color: #646cff;
+}
+
+.info {
+  margin-bottom: 20px;
+}
+
+.info h2 {
+  font-size: 1.2rem;
+  color: var(--color);
+  margin-bottom: 8px;
+}
+
+.info p {
+  font-size: 1rem;
+  color: var(--color);
 }

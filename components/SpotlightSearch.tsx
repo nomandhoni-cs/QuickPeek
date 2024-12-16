@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Command, CommandInput } from "./ui/command";
 import { ScrollArea } from "./ui/scroll-area";
+import TrialRemaining from "./TrialRemaining";
 
 interface SpotlightSearchProps {
   onClose: () => void;
@@ -252,8 +253,8 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
             key={section}
             className={`flex-1 p-2 capitalize ${
               activeSection === section
-                ? "bg-blue-100 text-blue-700 font-semibold"
-                : "hover:bg-gray-100"
+                ? "bg-[#32CD32] text-black font-semibold"
+                : "hover:bg-green-300"
             }`}
             onClick={() => {
               setActiveSection(section);
@@ -279,6 +280,14 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
         (value) => value && searchRegex.test(value.toString())
       )
     );
+  };
+
+  // Turncate text if it exceeds the maximum length
+  const truncateText = (text: string, maxLength: number) => {
+    if (text.length > maxLength) {
+      return text.slice(0, maxLength) + "...";
+    }
+    return text;
   };
 
   // Render result items
@@ -323,8 +332,8 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
           key={item.id}
           className={`flex items-center p-2 rounded-lg border cursor-pointer ${
             index === selectedItemIndex && hasArrowKeyPressed
-              ? "bg-blue-100 border-blue-300"
-              : "hover:bg-gray-50"
+              ? "bg-green-200 border-green-300"
+              : "hover:bg-green-300"
           }`}
           onClick={() => {
             setHasArrowKeyPressed(true);
@@ -333,10 +342,12 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
           }}
         >
           {icon}
-          <div className="flex-grow overflow-hidden">
-            <div className="truncate">{primaryText}</div>
-            <div className="text-xs text-gray-500 truncate">
-              {secondaryText}
+          <div className="flex-grow overflow-hidden max-w-full">
+            <div className="truncate whitespace-nowrap overflow-hidden text-ellipsis font-semibold">
+              {truncateText(primaryText, 90)}
+            </div>
+            <div className="text-xs text-gray-500 truncate whitespace-nowrap overflow-hidden text-ellipsis">
+              {truncateText(secondaryText, 90)}
             </div>
           </div>
         </div>
@@ -346,15 +357,15 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
 
   return (
     <div
-      className="fixed inset-0 -mt-32 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 w-full h-full bg-clip-padding backdrop-filter backdrop-blur-md bg-opacity-70 "
       onClick={onClose}
     >
       <div
-        className="w-full max-w-3xl absolute top-[40%] transform transition-all"
+        className="w-full max-w-3xl absolute top-[20%] transform transition-all"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-1">
-          <div></div>
+          <TrialRemaining />
 
           <a
             href="https://buymeacoffee.com/nomandhoni"
@@ -376,14 +387,14 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
         </div>
 
         <Command
-          className="rounded-xl border shadow-2xl bg-white overflow-hidden"
+          className="rounded-xl border shadow-xl bg-white dark:bg-black overflow-hidden"
           onKeyDown={handleKeyDown}
         >
           {/* Search Input Section */}
-          <div className="sticky top-0 z-20 bg-white border-b">
+          <div className="sticky top-0 z-20 bg-white dark:bg-black border-b">
             <CommandInput
               placeholder="Search tabs, history, bookmarks, downloads, or enter a URL..."
-              className="h-14 px-4 border-none focus:ring-0"
+              className="h-16 px-1 border-none focus:ring-0"
               value={input}
               onValueChange={setInput}
               onKeyDown={(e) => {

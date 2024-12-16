@@ -1,6 +1,57 @@
+import { encryptData } from "@/lib/cryptoUtils";
+import { installNanoId } from "@/lib/storage";
+import { nanoid } from "nanoid";
+
 export default defineBackground(() => {
   console.log("Spotlight Search Extension Initialized", {
     id: browser.runtime.id,
+  });
+
+  // Utility function to set the encrypted installation date
+  const setEncryptedInstallDate = async () => {
+    const currentTimestamp = Date.now().toString();
+    const encryptedDate = await encryptData(currentTimestamp);
+    const existingInstallDate = await storage.getItem<number[]>(
+      "sync:installDate"
+    );
+    if (existingInstallDate) {
+      console.log("Existing installation date found:", existingInstallDate);
+      return;
+    }
+    await storage.setItem("sync:installDate", JSON.stringify(encryptedDate));
+    console.log("Encrypted installation date stored:", encryptedDate);
+  };
+
+  // Listener for extension installation/updates
+  browser.runtime.onInstalled.addListener(async (details) => {
+    console.log("Extension installed/updated:", details);
+
+    try {
+      // Ensure Nano ID is initialized
+      let nanoId = await installNanoId.getValue();
+      if (!nanoId) {
+        await installNanoId.setValue(nanoid()); // Set the value
+        nanoId = await installNanoId.getValue(); // Retrieve the value after setting
+        console.log("Nano ID generated:", nanoId);
+      } else {
+        console.log("Nano ID already initialized:", nanoId);
+      }
+
+      // Set the encrypted installation date
+      await setEncryptedInstallDate();
+
+      // Set default search engine
+      const defaultSearchEngineKey = "sync:defaultSearchEngine";
+      const existingSearchEngine = await storage.getItem<string>(
+        defaultSearchEngineKey
+      );
+      if (!existingSearchEngine) {
+        await storage.setItem(defaultSearchEngineKey, "google");
+        console.log("Default search engine set to 'google'");
+      }
+    } catch (error) {
+      console.error("Error during initialization:", error);
+    }
   });
 
   browser.runtime.onMessage.addListener((message, sender, sendResponse) => {

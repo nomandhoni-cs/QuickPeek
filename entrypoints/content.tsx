@@ -8,6 +8,7 @@ export default defineContentScript({
   cssInjectionMode: "ui",
 
   main(ctx) {
+    console.log("Script Mounted");
     // Create a global event listener for CTRL+M
     const handleKeyDown = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key === "m") {
@@ -29,7 +30,7 @@ async function mountSpotlightSearch(ctx: ContentScriptContext) {
   const ui = await createShadowRootUi(ctx, {
     name: "spotlight-search",
     position: "inline",
-    anchor: "body",
+    anchor: "html",
     isolateEvents: true,
     onMount(container) {
       const root = createRoot(container);

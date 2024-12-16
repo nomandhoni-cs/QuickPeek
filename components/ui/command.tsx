@@ -38,7 +38,7 @@ const CommandInput = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
 >(({ className, ...props }, ref) => (
   <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
-    <MagnifyingGlassIcon className="mr-2 h-8 w-8 shrink-0 opacity-50" />
+    <MagnifyingGlassIcon className="mr-2 h-8 w-8 shrink-0 fill text-[#32CD32]" />
     <CommandPrimitive.Input
       ref={ref}
       className={cn(
