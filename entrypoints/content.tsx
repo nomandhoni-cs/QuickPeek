@@ -6,7 +6,7 @@ import SpotlightSearch from "../components/SpotlightSearch";
 export default defineContentScript({
   matches: ["<all_urls>"],
   cssInjectionMode: "ui",
-
+  runAt: "document_start",
   main(ctx) {
     console.log("Script Mounted");
     // Create a global event listener for CTRL+M

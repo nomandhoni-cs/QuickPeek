@@ -368,7 +368,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
   }, [selectedItemIndex]);
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 w-screen h-screen bg-clip-padding backdrop-filter backdrop-blur-md bg-opacity-70 "
+      className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 w-screen h-screen bg-clip-padding backdrop-filter backdrop-blur-md bg-opacity-70 "
       onClick={onClose}
     >
       <div
