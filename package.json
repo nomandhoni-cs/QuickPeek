@@ -2,7 +2,7 @@
   "name": "QuickPeek - Spotlight & Alfred like Search but for Browsers",
   "description": "Spotlight and Alfred like Search for Browsers",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "scripts": {
     "dev": "wxt",
@@ -17,6 +17,7 @@
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "@radix-ui/react-dialog": "^1.1.3",
+    "@radix-ui/react-scroll-area": "^1.2.2",
     "@types/webextension-polyfill": "^0.12.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

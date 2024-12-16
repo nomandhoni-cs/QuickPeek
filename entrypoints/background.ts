@@ -4,10 +4,11 @@ export default defineBackground(() => {
   });
 
   browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.action === "fetchAll") {
-      const searchTerm = message.searchTerm?.toLowerCase() || "";
+    console.log("Received message:", message);
+    const searchTerm = message.searchTerm?.toLowerCase() || "";
+    console.log("Search term:", searchTerm);
 
-      // Parallel promises to fetch all data
+    if (message.action === "fetchAll") {
       Promise.all([
         // Fetch Tabs
         new Promise<chrome.tabs.Tab[]>((resolve) => {
@@ -39,9 +40,31 @@ export default defineBackground(() => {
         }),
       ])
         .then(([tabs, history, bookmarks, downloads]) => {
-          // Prepare response with filtered and simplified data
+          // Filter tabs
+          const matchingTabs = tabs.filter(
+            (tab) =>
+              tab.title?.toLowerCase().includes(searchTerm) ||
+              tab.url?.toLowerCase().includes(searchTerm)
+          );
+          console.log("Matching Tabs:", matchingTabs);
+
+          // History is already filtered by the API call
+          console.log("Matching History:", history);
+
+          // Bookmarks are already filtered by the API call
+          console.log("Matching Bookmarks:", bookmarks);
+
+          // Filter downloads
+          const matchingDownloads = downloads.filter(
+            (download) =>
+              download.filename?.toLowerCase().includes(searchTerm) ||
+              download.url?.toLowerCase().includes(searchTerm)
+          );
+          console.log("Matching Downloads:", matchingDownloads);
+
+          // Prepare response with filtered data
           const response = {
-            tabs: tabs.map((tab) => ({
+            tabs: matchingTabs.map((tab) => ({
               id: tab.id,
               url: tab.url || "",
               title: tab.title || "",
@@ -60,7 +83,7 @@ export default defineBackground(() => {
               title: bookmark.title || "",
               parentId: bookmark.parentId,
             })),
-            downloads: downloads.map((download) => ({
+            downloads: matchingDownloads.map((download) => ({
               id: download.id,
               url: download.url || "",
               filename: download.filename
@@ -79,7 +102,6 @@ export default defineBackground(() => {
           sendResponse(null);
         });
 
-      // Return true to indicate asynchronous response
       return true;
     }
 

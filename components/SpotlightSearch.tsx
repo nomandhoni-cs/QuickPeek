@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Command,
   CommandItem,
@@ -7,6 +7,7 @@ import {
   CommandList,
   CommandGroup,
 } from "./ui/command";
+import { ScrollArea } from "./ui/scroll-area";
 
 interface SpotlightSearchProps {
   onClose: () => void;
@@ -51,6 +52,12 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
   >("tabs");
 
   const fetchResults = useCallback(async (searchTerm: string) => {
+    // Only fetch if search term is at least 3 characters
+    if (searchTerm.length < 3) {
+      setResults(null);
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await browser.runtime.sendMessage({
@@ -59,6 +66,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
       });
       if (response) {
         setResults(response);
+        console.log(response);
       }
     } catch (error) {
       console.error("Failed to fetch results:", error);
@@ -90,39 +98,39 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
     }
   };
 
+  // Improved URL detection using regex
+  const isValidUrl = useCallback((string: string): boolean => {
+    // Regex for URL detection:
+    // 1. Allows optional protocol (http://, https://, etc.)
+    // 2. Requires a domain name
+    // 3. Must have a dot followed by a top-level domain
+    // 4. No spaces allowed
+    const urlRegex =
+      /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
+    return urlRegex.test(string.trim());
+  }, []);
+
   const handleSubmit = useCallback(
     async (value: string) => {
+      const trimmedValue = value.trim();
+
       // Check if it's a valid URL
-      if (isValidUrl(value)) {
-        const url = value.includes("://") ? value : `https://${value}`;
+      if (isValidUrl(trimmedValue)) {
+        const url = trimmedValue.includes("://")
+          ? trimmedValue
+          : `https://${trimmedValue}`;
         window.open(url, "_blank");
       } else {
+        // If not a URL, perform a Google search
         const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(
-          value
+          trimmedValue
         )}`;
         window.open(searchUrl, "_blank");
       }
       onClose();
     },
-    [onClose]
+    [onClose, isValidUrl]
   );
-
-  // Function to check if a string is a valid URL
-  const isValidUrl = (string: string): boolean => {
-    try {
-      // Check if the string is a valid URL with or without the protocol
-      new URL(string);
-      return true;
-    } catch (e) {
-      // Try adding the 'https://' if it doesn't have any protocol and checking again
-      try {
-        new URL(`https://${string}`);
-        return true;
-      } catch (_) {
-        return false;
-      }
-    }
-  };
 
   const formatDownloadTime = (timestamp: number) => {
     return new Date(timestamp).toLocaleString();
@@ -130,7 +138,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
 
   const renderSectionTabs = () => {
     return (
-      <div className="flex border-b">
+      <div className="flex border-b sticky top-0 bg-white z-10">
         {["tabs", "history", "bookmarks", "downloads"].map((section) => (
           <button
             key={section}
@@ -152,57 +160,53 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
     if (!results) return [];
 
     const sectionResults = results[section];
+    // Use regex for case-insensitive search across all fields
+    const searchRegex = new RegExp(input.trim(), "i");
     return sectionResults.filter((item: any) =>
-      JSON.stringify(Object.values(item))
-        .toLowerCase()
-        .includes(input.toLowerCase())
+      Object.values(item).some(
+        (value) => value && searchRegex.test(value.toString())
+      )
     );
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
       <div
-        className="w-full max-w-5xl p-4"
+        className="w-full max-w-3xl transform transition-all"
         onClick={(e) => e.stopPropagation()}
       >
-        <Command className="rounded-lg border shadow-md bg-white">
-          <CommandInput
-            placeholder="Search tabs, history, bookmarks, downloads, or enter a URL..."
-            className="p-4"
-            value={input}
-            onValueChange={setInput}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && input.trim()) {
-                handleSubmit(input.trim());
-              }
-              // If Escape key is pressed, close the search box
-              if (e.key === "Escape") {
-                onClose();
-              }
-            }}
-            autoFocus
-          />
+        <Command className="rounded-xl border shadow-2xl bg-white overflow-hidden">
+          {/* Search Input Section */}
+          <div className="sticky top-0 z-20 bg-white border-b">
+            <CommandInput
+              placeholder="Search tabs, history, bookmarks, downloads, or enter a URL..."
+              className="h-14 px-4 border-none focus:ring-0"
+              value={input}
+              onValueChange={setInput}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && input.trim())
+                  handleSubmit(input.trim());
+                if (e.key === "Escape") onClose();
+              }}
+              autoFocus
+            />
+          </div>
 
-          {renderSectionTabs()}
-
-          {loading ? (
-            <div className="p-4 text-center">Loading...</div>
-          ) : (
-            <CommandList className="max-h-[500px] overflow-y-auto">
-              <CommandEmpty>No results found.</CommandEmpty>
-              {results && (
-                <>
-                  {activeSection === "tabs" && (
-                    <CommandGroup heading="Open Tabs">
-                      {filteredResults("tabs").map((tab) => (
-                        <CommandItem
-                          key={tab.id}
-                          onSelect={() => handleTabAction(tab.id, "activate")}
-                        >
-                          <div className="flex items-center w-full">
+          <ScrollArea className="h-[500px]">
+            <div className="p-4">
+              {results && !loading && (
+                <div className="space-y-6">
+                  {/* Tabs Section */}
+                  {results.tabs.length > 0 && (
+                    <div>
+                      <h3 className="font-semibold mb-2">Tabs</h3>
+                      <div className="grid grid-cols-1 gap-2">
+                        {results.tabs.slice(0, 3).map((tab) => (
+                          <div
+                            key={tab.id}
+                            className="flex items-center p-2 rounded-lg border hover:bg-gray-50 cursor-pointer"
+                            onClick={() => handleTabAction(tab.id, "activate")}
+                          >
                             {tab.favIconUrl && (
                               <img
                                 src={tab.favIconUrl}
@@ -210,86 +214,121 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
                                 className="w-4 h-4 mr-2"
                               />
                             )}
-                            <span className="flex-grow">{tab.title}</span>
-                            <div className="ml-auto flex items-center">
-                              <span className="text-xs text-gray-500 mr-2">
+                            <div className="flex-grow overflow-hidden">
+                              <div className="truncate">{tab.title}</div>
+                              <div className="text-xs text-gray-500 truncate">
                                 {tab.url}
-                              </span>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleTabAction(tab.id, "close");
-                                }}
-                                className="text-red-500 hover:bg-red-100 rounded-full p-1"
-                              >
-                                ×
-                              </button>
+                              </div>
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleTabAction(tab.id, "close");
+                              }}
+                              className="ml-2 text-red-500 hover:bg-red-100 rounded-full p-1"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* History Section */}
+                  {results.history.length > 0 && (
+                    <div>
+                      <h3 className="font-semibold mb-2">History</h3>
+                      <div className="grid grid-cols-1 gap-2">
+                        {results.history.slice(0, 3).map((item) => (
+                          <div
+                            key={item.id}
+                            className="flex items-center p-2 rounded-lg border hover:bg-gray-50 cursor-pointer"
+                            onClick={() => window.open(item.url, "_blank")}
+                          >
+                            <div className="flex-grow overflow-hidden">
+                              <div className="truncate">{item.title}</div>
+                              <div className="text-xs text-gray-500 truncate">
+                                {item.url}
+                              </div>
                             </div>
                           </div>
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
+                        ))}
+                      </div>
+                    </div>
                   )}
 
-                  {activeSection === "history" && (
-                    <CommandGroup heading="History">
-                      {filteredResults("history").map((item) => (
-                        <CommandItem
-                          key={item.id}
-                          onSelect={() => window.open(item.url, "_blank")}
-                        >
-                          <div className="flex items-center w-full">
-                            <span className="flex-grow">{item.title}</span>
-                            <span className="text-xs text-gray-500 ml-2">
-                              {item.url}
-                            </span>
-                          </div>
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  )}
-
-                  {activeSection === "bookmarks" && (
-                    <CommandGroup heading="Bookmarks">
-                      {filteredResults("bookmarks").map((bookmark) => (
-                        <CommandItem
-                          key={bookmark.id}
-                          onSelect={() => window.open(bookmark.url, "_blank")}
-                        >
-                          <div className="flex items-center w-full">
-                            <span className="flex-grow">{bookmark.title}</span>
-                            <span className="text-xs text-gray-500 ml-2">
-                              {bookmark.url}
-                            </span>
-                          </div>
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  )}
-
-                  {activeSection === "downloads" && (
-                    <CommandGroup heading="Downloads">
-                      {filteredResults("downloads").map((download) => (
-                        <CommandItem key={download.id}>
-                          <div className="flex items-center w-full">
-                            <span className="flex-grow">
-                              {download.filename}
-                            </span>
-                            <div className="text-xs text-gray-500 ml-2 flex items-center">
-                              <span className="mr-2">
-                                {formatDownloadTime(download.startTime)}
-                              </span>
-                              <span>{download.state}</span>
+                  {/* Bookmarks Section */}
+                  {results.bookmarks.length > 0 && (
+                    <div>
+                      <h3 className="font-semibold mb-2">Bookmarks</h3>
+                      <div className="grid grid-cols-1 gap-2">
+                        {results.bookmarks.slice(0, 3).map((bookmark) => (
+                          <div
+                            key={bookmark.id}
+                            className="flex items-center p-2 rounded-lg border hover:bg-gray-50 cursor-pointer"
+                            onClick={() => window.open(bookmark.url, "_blank")}
+                          >
+                            <div className="flex-grow overflow-hidden">
+                              <div className="truncate">{bookmark.title}</div>
+                              <div className="text-xs text-gray-500 truncate">
+                                {bookmark.url}
+                              </div>
                             </div>
                           </div>
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
+                        ))}
+                      </div>
+                    </div>
                   )}
-                </>
+
+                  {/* Downloads Section */}
+                  {results.downloads.length > 0 && (
+                    <div>
+                      <h3 className="font-semibold mb-2">Downloads</h3>
+                      <div className="grid grid-cols-1 gap-2">
+                        {results.downloads.slice(0, 3).map((download) => (
+                          <div
+                            key={download.id}
+                            className="flex items-center p-2 rounded-lg border hover:bg-gray-50"
+                          >
+                            <div className="flex-grow overflow-hidden">
+                              <div className="truncate">
+                                {download.filename}
+                              </div>
+                              <div className="text-xs text-gray-500 flex items-center">
+                                <span className="mr-2">
+                                  {formatDownloadTime(download.startTime)}
+                                </span>
+                                <span>{download.state}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* No Results Message */}
+                  {!results.tabs.length &&
+                    !results.history.length &&
+                    !results.bookmarks.length &&
+                    !results.downloads.length && (
+                      <div className="text-center text-gray-500">
+                        No results found
+                      </div>
+                    )}
+                </div>
               )}
-            </CommandList>
-          )}
+
+              {/* Loading State */}
+              {loading && (
+                <div className="flex items-center justify-center p-8 text-gray-500">
+                  <div className="animate-spin inline-block w-6 h-6 border-2 border-current border-t-transparent rounded-full mr-2" />
+                  <span>Loading...</span>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
         </Command>
       </div>
     </div>
