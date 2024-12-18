@@ -365,9 +365,13 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
     }
   }, [selectedItemIndex]);
   return (
-    <div className="flex items-center justify-center" onClick={onClose}>
+    <div
+      id="quickpeek-search-container"
+      className="flex items-center justify-center"
+      onClick={onClose}
+    >
       <div
-        className="w-full max-w-4xl absolute top-[20%] transform transition-all"
+        className="w-full max-w-4xl absolute top-[20%] transform transition-all px-4"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-1">

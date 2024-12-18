@@ -1,7 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-:root {
+#quickpeek-search-container {
   position: fixed;
   top: 0;
   left: 0;
