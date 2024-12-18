@@ -6,7 +6,13 @@ export default defineBackground(() => {
   console.log("Spotlight Search Extension Initialized", {
     id: browser.runtime.id,
   });
+  browser.sidePanel
+    .setPanelBehavior({ openPanelOnActionClick: true })
+    .catch((error) => console.error(error));
 
+  browser.runtime.setUninstallURL("https://blinkeye.app/en/goodbye", () => {
+    console.log("Uninstall URL has been set");
+  });
   // Utility function to set the encrypted installation date
   const setEncryptedInstallDate = async () => {
     const currentTimestamp = Date.now().toString();
@@ -52,6 +58,10 @@ export default defineBackground(() => {
     } catch (error) {
       console.error("Error during initialization:", error);
     }
+    // After installing / Updating open this url
+    browser.tabs.create({
+      url: browser.runtime.getURL("/usermanual.html"),
+    });
   });
 
   browser.runtime.onMessage.addListener((message, sender, sendResponse) => {

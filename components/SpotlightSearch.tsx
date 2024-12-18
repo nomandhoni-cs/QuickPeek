@@ -3,6 +3,7 @@ import { Command, CommandInput } from "./ui/command";
 import { ScrollArea } from "./ui/scroll-area";
 import TrialRemaining from "./TrialRemaining";
 import RowSkeleton from "./RowSkeleton";
+import { handleSearch } from "@/lib/searchUrl";
 
 interface SpotlightSearchProps {
   onClose: () => void;
@@ -72,10 +73,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
           : `https://${trimmedValue}`;
         window.open(url, "_blank");
       } else {
-        const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(
-          trimmedValue
-        )}`;
-        window.open(searchUrl, "_blank");
+        handleSearch(trimmedValue);
       }
       onClose();
     },
@@ -367,12 +365,9 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
     }
   }, [selectedItemIndex]);
   return (
-    <div
-      className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 w-screen h-screen bg-clip-padding backdrop-filter backdrop-blur-md bg-opacity-70 "
-      onClick={onClose}
-    >
+    <div className="flex items-center justify-center" onClick={onClose}>
       <div
-        className="w-full max-w-3xl absolute top-[20%] transform transition-all"
+        className="w-full max-w-4xl absolute top-[20%] transform transition-all"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-1">

@@ -1,6 +1,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+:root {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 999999;
+  backdrop-filter: blur(10px); /* Equivalent to backdrop-blur-md */
+  background-color: rgba(
+    0,
+    0,
+    0,
+    0.8
+  ); /* Change alpha to 0.7 for a slightly more opaque background */
+}
 
 @layer base {
   :root {

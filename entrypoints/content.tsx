@@ -28,7 +28,7 @@ export default defineContentScript({
 
 async function mountSpotlightSearch(ctx: ContentScriptContext) {
   const ui = await createShadowRootUi(ctx, {
-    name: "spotlight-search",
+    name: "quickpeek-search",
     position: "inline",
     anchor: "html",
     isolateEvents: true,
