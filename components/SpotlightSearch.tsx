@@ -28,6 +28,14 @@ interface SearchResult {
   downloads: SearchItem[];
 }
 
+// Add this interface to track last fetched terms
+interface SectionCache {
+  [key: string]: {
+    lastTerm: string;
+    data: SearchItem[];
+  };
+}
+
 const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
   const [input, setInput] = useState("");
   const [results, setResults] = useState<SearchResult | null>(null);
@@ -40,6 +48,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
   const [hasArrowKeyPressed, setHasArrowKeyPressed] = useState(false);
   const resultsRef = useRef<HTMLDivElement>(null);
   const selectedItemRef = useRef<HTMLDivElement>(null);
+  const [sectionCache, setSectionCache] = useState<SectionCache>({});
 
   const isValidUrl = useCallback((string: string): boolean => {
     const urlRegex =
@@ -103,6 +112,26 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
         return;
       }
 
+      // Check cache before fetching
+      if (sectionCache[activeSection]?.lastTerm === searchTerm) {
+        setResults((prev) =>
+          prev
+            ? {
+                ...prev,
+                [activeSection]: sectionCache[activeSection].data,
+              }
+            : {
+                recent: [],
+                tabs: [],
+                history: [],
+                bookmarks: [],
+                downloads: [],
+                [activeSection]: sectionCache[activeSection].data,
+              }
+        );
+        return;
+      }
+
       setLoading(true);
       try {
         const response = await browser.runtime.sendMessage({
@@ -112,6 +141,15 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
         });
 
         if (response) {
+          // Update cache
+          setSectionCache((prev) => ({
+            ...prev,
+            [activeSection]: {
+              lastTerm: searchTerm,
+              data: response[activeSection],
+            },
+          }));
+
           setResults((prev) => ({
             ...prev,
             ...response,
@@ -126,7 +164,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
         setLoading(false);
       }
     },
-    [activeSection]
+    [activeSection, sectionCache]
   );
 
   // Fetch results when input changes
