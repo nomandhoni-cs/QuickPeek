@@ -40,11 +40,7 @@ interface SectionCache {
 }
 
 const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
-  // const { canAccessPremiumFeatures, isPaidUser } = usePremiumFeatures();
-  const canAccessPremiumFeatures = false;
-  const isPaidUser = false;
-  console.log(canAccessPremiumFeatures, "canAccessPremiumFeatures");
-  console.log(isPaidUser, "isPaidUser");
+  const { canAccessPremiumFeatures, isPaidUser } = usePremiumFeatures();
   const [input, setInput] = useState("");
   const [results, setResults] = useState<SearchResult | null>(null);
   const [loading, setLoading] = useState(false);
