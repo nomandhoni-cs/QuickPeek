@@ -71,6 +71,19 @@ export default defineBackground(() => {
 
     if (message.action === "fetchAll") {
       Promise.all([
+        // Fetch Recent (last month) items first
+        new Promise<chrome.history.HistoryItem[]>((resolve) => {
+          const lastMonth = Date.now() - 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
+          browser.history.search(
+            {
+              text: searchTerm,
+              maxResults: 10,
+              startTime: lastMonth,
+            },
+            (history) => resolve(history)
+          );
+        }),
+
         // Fetch Tabs
         new Promise<chrome.tabs.Tab[]>((resolve) => {
           browser.tabs.query({}, (tabs) => resolve(tabs));
@@ -100,7 +113,16 @@ export default defineBackground(() => {
           browser.downloads.search({}, (downloads) => resolve(downloads));
         }),
       ])
-        .then(([tabs, history, bookmarks, downloads]) => {
+        .then(([recentHistory, tabs, history, bookmarks, downloads]) => {
+          // Filter recent items that are most relevant
+          const recentItems = recentHistory.map((item) => ({
+            type: "recent",
+            id: item.id,
+            url: item.url || "",
+            title: item.title || "",
+            lastVisitTime: item.lastVisitTime,
+          }));
+
           // Filter tabs
           const matchingTabs = tabs.filter(
             (tab) =>
@@ -125,6 +147,7 @@ export default defineBackground(() => {
 
           // Prepare response with filtered data
           const response = {
+            recent: recentItems,
             tabs: matchingTabs.map((tab) => ({
               id: tab.id,
               url: tab.url || "",
@@ -183,6 +206,7 @@ export default defineBackground(() => {
       } else if (downloadAction === "open") {
         browser.downloads.open(downloadId);
       }
+      sendResponse({ success: true });
       return true;
     }
   });

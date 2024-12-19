@@ -17,9 +17,11 @@ interface SearchItem {
   filename?: string;
   startTime?: number;
   state?: string;
+  lastVisitTime?: number;
 }
 
 interface SearchResult {
+  recent: SearchItem[];
   tabs: SearchItem[];
   history: SearchItem[];
   bookmarks: SearchItem[];
@@ -31,7 +33,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
   const [results, setResults] = useState<SearchResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeSection, setActiveSection] =
-    useState<keyof SearchResult>("tabs");
+    useState<keyof SearchResult>("recent");
   const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(
     null
   );
@@ -117,6 +119,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
       if (!results) return;
 
       const sections: (keyof SearchResult)[] = [
+        "recent",
         "tabs",
         "history",
         "bookmarks",
@@ -207,15 +210,17 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
     action: "show" | "open"
   ) => {
     try {
-      await browser.runtime.sendMessage({
+      const response = await browser.runtime.sendMessage({
         action: "downloadAction",
         downloadId,
         downloadAction: action,
       });
+      if (!response?.success) {
+        throw new Error(response?.error || "Failed to perform download action");
+      }
       onClose();
     } catch (error) {
-      // console.error("Failed to perform download action:", error);
-      alert(error);
+      console.error("Failed to perform download action:", error);
     }
   };
 
@@ -241,6 +246,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
   // Render section selector tabs
   const renderSectionTabs = () => {
     const sections: (keyof SearchResult)[] = [
+      "recent",
       "tabs",
       "history",
       "bookmarks",
@@ -258,11 +264,9 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
             }`}
             onClick={() => {
               setActiveSection(section);
-              // setSelectedItemIndex(null);
-              // setHasArrowKeyPressed(false);
             }}
           >
-            {section}
+            {section === "recent" ? "Recent" : section}
           </button>
         ))}
       </div>
@@ -300,6 +304,18 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
       let secondaryText = "";
 
       switch (activeSection) {
+        case "recent":
+          if ("favIconUrl" in item) {
+            icon = item.favIconUrl ? (
+              <img src={item.favIconUrl} alt="" className="w-4 h-4 mr-2" />
+            ) : null;
+          }
+          primaryText = item.title;
+          secondaryText = item.url;
+          secondaryText += ` • ${new Date(
+            item.lastVisitTime || Date.now()
+          ).toLocaleString()}`;
+          break;
         case "tabs":
           icon = (item as any).favIconUrl ? (
             <img
