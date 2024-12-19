@@ -43,6 +43,8 @@ jobs:
 
       # Build and zip the extensions
       - name: Zip extensions
+        env:
+          VITE_QUICKPEEK_HANDSHAKE_PASSWORD: ${{ secrets.VITE_QUICKPEEK_HANDSHAKE_PASSWORD }}
         run: |
           pnpm zip
           pnpm zip:firefox

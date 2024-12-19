@@ -67,145 +67,127 @@ export default defineBackground(() => {
   browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.log("Received message:", message);
     const searchTerm = message.searchTerm?.toLowerCase() || "";
-    console.log("Search term:", searchTerm);
 
-    if (message.action === "fetchAll") {
-      Promise.all([
-        // Fetch Recent items (4 most recent matches)
-        new Promise<chrome.history.HistoryItem[]>((resolve) => {
+    // New section-specific fetch handlers
+    if (message.action === "fetchSection") {
+      const { section } = message;
+
+      switch (section) {
+        case "recent":
           browser.history.search(
             {
               text: searchTerm,
-              maxResults: 4, // Only get 4 most recent matches
+              maxResults: 4,
               startTime: 0,
             },
-            (history) => resolve(history)
+            (history) => {
+              sendResponse({
+                recent: history.map((item) => ({
+                  id: item.id,
+                  url: item.url || "",
+                  title: item.title || "",
+                  lastVisitTime: item.lastVisitTime,
+                })),
+              });
+            }
           );
-        }),
+          break;
 
-        // Fetch Tabs
-        new Promise<chrome.tabs.Tab[]>((resolve) => {
-          browser.tabs.query({}, (tabs) => resolve(tabs));
-        }),
+        case "tabs":
+          browser.tabs.query({}, (tabs) => {
+            const [matchingTabs, nonMatchingTabs] = tabs.reduce(
+              ([matching, nonMatching], tab) => {
+                const isMatch =
+                  tab.title?.toLowerCase().includes(searchTerm) ||
+                  tab.url?.toLowerCase().includes(searchTerm);
+                return isMatch
+                  ? [[...matching, tab], nonMatching]
+                  : [matching, [...nonMatching, tab]];
+              },
+              [[], []] as [chrome.tabs.Tab[], chrome.tabs.Tab[]]
+            );
 
-        // Fetch History
-        new Promise<chrome.history.HistoryItem[]>((resolve) => {
+            sendResponse({
+              tabs: [...matchingTabs, ...nonMatchingTabs].map((tab) => ({
+                id: tab.id,
+                url: tab.url || "",
+                title: tab.title || "",
+                active: tab.active,
+                favIconUrl: tab.favIconUrl,
+                isMatch: matchingTabs.includes(tab),
+              })),
+            });
+          });
+          break;
+
+        case "history":
           browser.history.search(
             {
               text: searchTerm,
               maxResults: 50,
               startTime: 0,
             },
-            (history) => resolve(history)
+            (history) => {
+              sendResponse({
+                history: history.map((item) => ({
+                  id: item.id,
+                  url: item.url || "",
+                  title: item.title || "",
+                  lastVisitTime: item.lastVisitTime,
+                })),
+              });
+            }
           );
-        }),
+          break;
 
-        // Fetch Bookmarks
-        new Promise<chrome.bookmarks.BookmarkTreeNode[]>((resolve) => {
-          browser.bookmarks.search(searchTerm, (bookmarks) =>
-            resolve(bookmarks)
-          );
-        }),
+        case "bookmarks":
+          browser.bookmarks.search(searchTerm, (bookmarks) => {
+            sendResponse({
+              bookmarks: bookmarks.map((bookmark) => ({
+                id: bookmark.id,
+                url: bookmark.url || "",
+                title: bookmark.title || "",
+                parentId: bookmark.parentId,
+              })),
+            });
+          });
+          break;
 
-        // Fetch Downloads
-        new Promise<chrome.downloads.DownloadItem[]>((resolve) => {
-          browser.downloads.search({ state: "complete" }, (downloads) =>
-            resolve(downloads)
-          );
-        }),
-      ])
-        .then(([recentHistory, tabs, history, bookmarks, downloads]) => {
-          // Filter recent items that are most relevant
-          const recentItems = recentHistory.map((item) => ({
-            type: "recent",
-            id: item.id,
-            url: item.url || "",
-            title: item.title || "",
-            lastVisitTime: item.lastVisitTime,
-          }));
+        case "downloads":
+          browser.downloads.search({ state: "complete" }, (downloads) => {
+            const [matchingDownloads, nonMatchingDownloads] = downloads.reduce(
+              ([matching, nonMatching], download) => {
+                const isMatch =
+                  download.filename?.toLowerCase().includes(searchTerm) ||
+                  download.url?.toLowerCase().includes(searchTerm);
+                return isMatch
+                  ? [[...matching, download], nonMatching]
+                  : [matching, [...nonMatching, download]];
+              },
+              [[], []] as [
+                chrome.downloads.DownloadItem[],
+                chrome.downloads.DownloadItem[]
+              ]
+            );
 
-          // Sort tabs into matching and non-matching
-          const [matchingTabs, nonMatchingTabs] = tabs.reduce(
-            ([matching, nonMatching], tab) => {
-              const isMatch =
-                tab.title?.toLowerCase().includes(searchTerm) ||
-                tab.url?.toLowerCase().includes(searchTerm);
-              return isMatch
-                ? [[...matching, tab], nonMatching]
-                : [matching, [...nonMatching, tab]];
-            },
-            [[], []] as [chrome.tabs.Tab[], chrome.tabs.Tab[]]
-          );
-
-          // Combine matching and non-matching tabs
-          const sortedTabs = [...matchingTabs, ...nonMatchingTabs];
-          console.log("Sorted Tabs:", sortedTabs);
-
-          // Sort downloads into matching and non-matching
-          const [matchingDownloads, nonMatchingDownloads] = downloads.reduce(
-            ([matching, nonMatching], download) => {
-              const isMatch =
-                download.filename?.toLowerCase().includes(searchTerm) ||
-                download.url?.toLowerCase().includes(searchTerm);
-              return isMatch
-                ? [[...matching, download], nonMatching]
-                : [matching, [...nonMatching, download]];
-            },
-            [[], []] as [
-              chrome.downloads.DownloadItem[],
-              chrome.downloads.DownloadItem[]
-            ]
-          );
-
-          // Combine matching and non-matching downloads
-          const sortedDownloads = [
-            ...matchingDownloads,
-            ...nonMatchingDownloads,
-          ];
-          console.log("Sorted Downloads:", sortedDownloads);
-
-          // Prepare response with sorted data
-          const response = {
-            recent: recentItems,
-            tabs: sortedTabs.map((tab) => ({
-              id: tab.id,
-              url: tab.url || "",
-              title: tab.title || "",
-              active: tab.active,
-              favIconUrl: tab.favIconUrl,
-              isMatch: matchingTabs.includes(tab), // Add flag to indicate if it's a match
-            })),
-            history: history.map((item) => ({
-              id: item.id,
-              url: item.url || "",
-              title: item.title || "",
-              lastVisitTime: item.lastVisitTime,
-            })),
-            bookmarks: bookmarks.map((bookmark) => ({
-              id: bookmark.id,
-              url: bookmark.url || "",
-              title: bookmark.title || "",
-              parentId: bookmark.parentId,
-            })),
-            downloads: sortedDownloads.map((download) => ({
-              id: download.id,
-              url: download.url || "",
-              filename: download.filename
-                ? download.filename.split(/[/\\]/).pop() || ""
-                : "",
-              state: download.state,
-              startTime: download.startTime,
-              finalUrl: download.finalUrl || "",
-              isMatch: matchingDownloads.includes(download), // Add flag to indicate if it's a match
-            })),
-          };
-
-          sendResponse(response);
-        })
-        .catch((error) => {
-          // console.error("Error fetching data:", error);
-          sendResponse(null);
-        });
+            sendResponse({
+              downloads: [...matchingDownloads, ...nonMatchingDownloads].map(
+                (download) => ({
+                  id: download.id,
+                  url: download.url || "",
+                  filename: download.filename
+                    ? download.filename.split(/[/\\]/).pop() || ""
+                    : "",
+                  state: download.state,
+                  startTime: download.startTime,
+                  finalUrl: download.finalUrl || "",
+                  isMatch: matchingDownloads.includes(download),
+                })
+              ),
+            });
+          });
+          break;
+      }
 
       return true;
     }

@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { decryptData } from "@/lib/cryptoUtils";
+import { Button } from "./ui/button";
+import { FireIcon } from "@heroicons/react/24/solid";
 
 const TrialRemaining = () => {
   const [installTimeValue, setInstallTimeValue] = useState<Date | null>(null);
@@ -57,11 +59,25 @@ const TrialRemaining = () => {
   }, []);
 
   return (
-    <div className="trial-container">
+    <div className="mb-2 px-1">
       {installTimeValue ? (
-        <span className="trial-info text-white">
-          Trial Remaining: {trialRemaining}
-        </span>
+        <div className="flex items-center justify-between">
+          <span className=" text-white font-semibold">
+            Trial Remaining: {trialRemaining}
+          </span>
+          <span className="flex items-center justify-center text-white">
+            You are using a free version
+            <Button
+              className="bg-yellow-500 text-black ml-2 hover:bg-yellow-600"
+              asChild
+            >
+              <a href="https://quickpeek.vercel.app/pricing" target="_blank">
+                <FireIcon className="w-4 h-4" />
+                Upgrade
+              </a>
+            </Button>
+          </span>
+        </div>
       ) : (
         <span className="trial-info text-white animate-pulse">
           Loading trial information...
