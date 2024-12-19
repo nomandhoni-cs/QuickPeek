@@ -30,6 +30,5 @@ export const setEncryptedInstallDate = async (): Promise<void> => {
     const currentInstallDate = Date.now().toString();
     const encryptedDate = await encryptData(currentInstallDate);
     await storage.setItem("sync:installDate", encryptedDate);
-    console.log("Encrypted installation date set:", encryptedDate);
   }
 };

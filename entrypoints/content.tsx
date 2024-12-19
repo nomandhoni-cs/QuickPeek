@@ -8,7 +8,7 @@ export default defineContentScript({
   cssInjectionMode: "ui",
   runAt: "document_start",
   main(ctx) {
-    console.log("Script Mounted");
+    console.log("Quickpeek Search Mounted");
     // Create a global event listener for CTRL+M
     const handleKeyDown = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key === "m") {

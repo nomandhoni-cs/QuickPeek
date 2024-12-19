@@ -4,7 +4,6 @@ import { storage } from "wxt/storage";
 export const handleSearch = async (trimmedValue: string) => {
   // Retrieve the saved search engine asynchronously
   const savedSearchEngine = await storage.getItem("sync:defaultSearchEngine");
-  console.log(savedSearchEngine);
 
   // Handle search based on the saved search engine
   switch (savedSearchEngine) {

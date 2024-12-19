@@ -40,7 +40,6 @@ export function useLicenseKey(): UseLicenseKeyReturn {
       setError(null);
 
       const encryptedData = await licenseStorage.getValue();
-      console.log(encryptedData);
 
       if (encryptedData) {
         const decryptedData: LicenseData = {
@@ -48,7 +47,6 @@ export function useLicenseKey(): UseLicenseKeyReturn {
           status: await decryptData(encryptedData.status),
           saved_date: await decryptData(encryptedData.saved_date),
         };
-        console.log(decryptedData);
         setLicenseData(decryptedData);
       } else {
         setLicenseData(null);
