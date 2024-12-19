@@ -15,7 +15,7 @@ import { CheckCircleIcon, ArrowPathIcon } from "@heroicons/react/24/solid";
 import { encryptData } from "@/lib/cryptoUtils";
 import { generatePhrase } from "@/lib/namegenerator";
 
-const handshakePassword = import.meta.env.VITE_HANDSHAKE_PASSWORD;
+const handshakePassword = import.meta.env.VITE_QUICKPEEK_HANDSHAKE_PASSWORD;
 
 // Add this type definition
 type LicenseStorageData = {
@@ -109,7 +109,7 @@ const ActivateLicense = () => {
 
     try {
       const response = await fetch(
-        "https://blinkeye.vercel.app/api/activatelicense",
+        "https://quickpeek.vercel.app/api/activatelicense",
         {
           method: "POST",
           headers: {

@@ -3,11 +3,11 @@ import SearchEngineSelector from "./SearchEngineSelector";
 import logo from "/icon/128.png";
 export default function QuickPeekManual() {
   return (
-    <div className="max-w-6xl mx-auto p-8 space-y-4 w-full h-screen">
+    <div className="max-w-6xl mx-auto p-4 space-y-4 w-full h-screen">
       <div className="flex items-center">
-        <img src={logo} alt="QuickPeek Logo" className="app-logo w-16 h-16" />{" "}
-        <h1 className="text-5xl -ml-2 font-bold text-[#32CD32]">
-          uickPeek User Manual
+        <img src={logo} alt="QuickPeek Logo" className="app-logo w-10 h-10" />{" "}
+        <h1 className="text-4xl -ml-1 font-bold text-[#32CD32]">
+          uickPeek just got better!
         </h1>
       </div>
       <div>
@@ -22,12 +22,12 @@ export default function QuickPeekManual() {
       </div>
       <section>
         <h2 className="text-3xl font-semibold mb-4">How to Use QuickPeek</h2>
-        <p className="text-5xl font-bold text-center my-8 text-[#32CD32]">
+        <p className="text-3xl font-semibold text-center my-8 text-[#32CD32]">
           Turn on the extension or use the search bar on any page!
         </p>
       </section>
       <section>
-        <h2 className="text-3xl font-semibold mb-6">Keyboard Shortcuts</h2>
+        <h2 className="text-3xl font-semibold mb-2">Keyboard Shortcuts</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
             { os: "Windows", shortcut: "CTRL + M" },
@@ -36,7 +36,7 @@ export default function QuickPeekManual() {
           ].map((item) => (
             <div
               key={item.os}
-              className="rounded-lg shadow-md p-6 transition-all duration-300 hover:shadow-lg hover:scale-105 ring-2 ring-[#32CD32]"
+              className="rounded-lg shadow-md p-3 transition-all duration-300 hover:shadow-lg hover:scale-105 ring-2 ring-[#32CD32]"
             >
               <h3 className="text-xl font-medium mb-3 text-[#32CD32]">
                 {item.os}
@@ -47,6 +47,7 @@ export default function QuickPeekManual() {
         </div>
       </section>
       <SearchEngineSelector />
+      <ActivateLicense />
       <section>
         <h2 className="text-3xl font-semibold mb-4">Additional Information</h2>
         <p className="text-lg">

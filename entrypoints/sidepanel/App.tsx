@@ -62,8 +62,8 @@ function App() {
       </div>
       <ActivateLicense />
       <SearchEngineSelector />
-      <div className="info mt-2">
-        <h2 className="text-xl font-semibold mb-2">Installation Time</h2>
+      <div className="info mt-1">
+        <h3 className="text-xl font-semibold mb-1">Installation Time</h3>
         <p className="text-gray-600">
           {installTimeValue
             ? installTimeValue.toLocaleString("en-US", {
