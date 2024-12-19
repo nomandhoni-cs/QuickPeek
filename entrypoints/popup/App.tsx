@@ -9,24 +9,17 @@ function App() {
   useEffect(() => {
     const fetchStorageData = async () => {
       try {
-        // // Fetch Nano ID
-        // const storedNanoId = await storage.getItem<string>("sync:nanoId");
-        // setNanoId(storedNanoId || "No Nano ID found");
-
         // Fetch and decrypt installation time
         const encryptedInstallTimeString = await storage.getItem<string>(
           "sync:installDate"
         );
-        console.log(encryptedInstallTimeString);
         if (encryptedInstallTimeString) {
           const decryptedInstallTime = await decryptData(
             encryptedInstallTimeString
           );
-          console.log(decryptedInstallTime);
           const timestamp = parseInt(decryptedInstallTime);
           setInstallTimeValue(new Date(timestamp));
         } else {
-          console.log("No install time found");
           setInstallTimeValue(null);
         }
       } catch (error) {

@@ -21,7 +21,6 @@ const useDecryptedDate = (): DecryptedData => {
           const decryptedInstallTime = await decryptData(
             encryptedInstallTimeString
           );
-          console.log(decryptedInstallTime, "decryptedInstallTime");
           setDecryptedDate(decryptedInstallTime);
         }
       } catch (error) {

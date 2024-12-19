@@ -51,7 +51,6 @@ export function useOnlineStatus(): {
       const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
       const remaining = TRIAL_DAYS - diffDays;
-      console.log(remaining, "remaining");
       setDaysRemaining(remaining);
       setIsTrialOn(remaining > 0);
     } catch (error) {
