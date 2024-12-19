@@ -10,9 +10,7 @@ export default defineBackground(() => {
     .setPanelBehavior({ openPanelOnActionClick: true })
     .catch((error) => console.error(error));
 
-  browser.runtime.setUninstallURL("https://blinkeye.app/en/goodbye", () => {
-    console.log("Uninstall URL has been set");
-  });
+  browser.runtime.setUninstallURL("https://blinkeye.app/en/goodbye", () => {});
   // Utility function to set the encrypted installation date
   const setEncryptedInstallDate = async () => {
     const currentTimestamp = Date.now().toString();
@@ -21,26 +19,19 @@ export default defineBackground(() => {
       "sync:installDate"
     );
     if (existingInstallDate) {
-      console.log("Existing installation date found:", existingInstallDate);
       return;
     }
     await storage.setItem("sync:installDate", JSON.stringify(encryptedDate));
-    console.log("Encrypted installation date stored:", encryptedDate);
   };
 
   // Listener for extension installation/updates
   browser.runtime.onInstalled.addListener(async (details) => {
-    console.log("Extension installed/updated:", details);
-
     try {
       // Ensure Nano ID is initialized
       let nanoId = await installNanoId.getValue();
       if (!nanoId) {
         await installNanoId.setValue(nanoid()); // Set the value
         nanoId = await installNanoId.getValue(); // Retrieve the value after setting
-        console.log("Nano ID generated:", nanoId);
-      } else {
-        console.log("Nano ID already initialized:", nanoId);
       }
 
       // Set the encrypted installation date
@@ -53,7 +44,6 @@ export default defineBackground(() => {
       );
       if (!existingSearchEngine) {
         await storage.setItem(defaultSearchEngineKey, "google");
-        console.log("Default search engine set to 'google'");
       }
     } catch (error) {
       console.error("Error during initialization:", error);
@@ -65,7 +55,6 @@ export default defineBackground(() => {
   });
 
   browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    console.log("Received message:", message);
     const searchTerm = message.searchTerm?.toLowerCase() || "";
 
     // New section-specific fetch handlers
