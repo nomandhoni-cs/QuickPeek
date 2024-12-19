@@ -488,7 +488,9 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
               {results && renderSectionTabs()}
               <ScrollArea className="h-[280px] py-1" scrollHideDelay={0}>
                 {loading ? (
-                  <RowSkeleton count={4} />
+                  <div className="px-2">
+                    <RowSkeleton count={4} />
+                  </div>
                 ) : (
                   results && (
                     <div className="p-2 space-y-2">
