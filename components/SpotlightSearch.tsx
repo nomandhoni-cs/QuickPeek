@@ -4,6 +4,7 @@ import { ScrollArea } from "./ui/scroll-area";
 import TrialRemaining from "./TrialRemaining";
 import RowSkeleton from "./RowSkeleton";
 import { handleSearch } from "@/lib/searchUrl";
+import { FireIcon } from "@heroicons/react/24/solid";
 
 interface SpotlightSearchProps {
   onClose: () => void;
@@ -316,7 +317,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
         {sections.map((section) => (
           <button
             key={section}
-            className={`flex-1 p-2 capitalize ${
+            className={`flex-1 p-2 capitalize flex items-center justify-center gap-1 ${
               activeSection === section
                 ? "bg-[#32CD32] text-black font-semibold"
                 : "hover:bg-green-300"
@@ -325,7 +326,10 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
               setActiveSection(section);
             }}
           >
-            {section === "recent" ? "Recent" : section}
+            {section}
+            {section !== "recent" && (
+              <FireIcon className="h-4 w-4 text-amber-400" />
+            )}
           </button>
         ))}
       </div>
