@@ -436,6 +436,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
       });
     }
   }, [selectedItemIndex]);
+  const handshakePassword = import.meta.env.VITE_HANDSHAKE_PASSWORD;
   return (
     <div
       id="quickpeek-search-container"
@@ -448,7 +449,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
       >
         <div className="flex items-center justify-between mb-1">
           <TrialRemaining />
-
+          <p>{handshakePassword}</p>
           <a
             href="https://buymeacoffee.com/nomandhoni"
             className="inline-flex items-center bg-yellow-400 rounded-lg p-2 text-xs text-black cursor-pointer"
