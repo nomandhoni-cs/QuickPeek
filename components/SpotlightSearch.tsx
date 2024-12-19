@@ -83,35 +83,56 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
   );
 
   // Fetch results based on input
-  const fetchResults = useCallback(async (searchTerm: string) => {
-    if (searchTerm.length < 3) {
-      setResults(null);
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const response = await browser.runtime.sendMessage({
-        action: "fetchAll",
-        searchTerm,
-      });
-      if (response) {
-        setResults(response);
-        // Reset selection and arrow key state when new results are fetched
-        setSelectedItemIndex(null);
-        setHasArrowKeyPressed(false);
+  const fetchResults = useCallback(
+    async (searchTerm: string) => {
+      if (searchTerm.length < 3) {
+        setResults((prev) =>
+          prev
+            ? {
+                ...prev,
+                [activeSection]: [],
+              }
+            : {
+                recent: [],
+                tabs: [],
+                history: [],
+                bookmarks: [],
+                downloads: [],
+              }
+        );
+        return;
       }
-    } catch (error) {
-      console.error("Failed to fetch results:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+
+      setLoading(true);
+      try {
+        const response = await browser.runtime.sendMessage({
+          action: "fetchSection",
+          section: activeSection,
+          searchTerm,
+        });
+
+        if (response) {
+          setResults((prev) => ({
+            ...prev,
+            ...response,
+          }));
+          // Reset selection and arrow key state when new results are fetched
+          setSelectedItemIndex(null);
+          setHasArrowKeyPressed(false);
+        }
+      } catch (error) {
+        console.error("Failed to fetch results:", error);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [activeSection]
+  );
 
   // Fetch results when input changes
   useEffect(() => {
     fetchResults(input);
-  }, [input, fetchResults]);
+  }, [input, activeSection, fetchResults]);
 
   // Handle keyboard navigation
   const handleKeyDown = useCallback(
@@ -423,22 +444,28 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
             />
           </div>
 
-          {/* Results Section */}
-          {results && renderSectionTabs()}
-          {results && !loading && (
-            <ScrollArea className="h-[300px] py-2" scrollHideDelay={0}>
-              <div className="p-2 space-y-2">
-                {renderResultItems()}
-                {renderResultItems().length === 0 && (
-                  <div className="text-center text-gray-500">
-                    No results found
-                  </div>
+          {/* Only show results section if input length >= 3 */}
+          {input.length >= 3 && (
+            <>
+              {results && renderSectionTabs()}
+              <ScrollArea className="h-[280px] py-1" scrollHideDelay={0}>
+                {loading ? (
+                  <RowSkeleton count={4} />
+                ) : (
+                  results && (
+                    <div className="p-2 space-y-2">
+                      {renderResultItems()}
+                      {renderResultItems().length === 0 && (
+                        <div className="text-center text-gray-500">
+                          No results found
+                        </div>
+                      )}
+                    </div>
+                  )
                 )}
-              </div>
-              {loading && <RowSkeleton count={4} />}
-            </ScrollArea>
+              </ScrollArea>
+            </>
           )}
-          {/* Loading State */}
         </Command>
       </div>
     </div>
