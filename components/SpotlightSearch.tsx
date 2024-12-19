@@ -276,14 +276,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
   // Filter results based on input
   const filteredResults = () => {
     if (!results) return [];
-
-    const sectionResults = results[activeSection];
-    const searchRegex = new RegExp(input.trim(), "i");
-    return sectionResults.filter((item: any) =>
-      Object.values(item).some(
-        (value) => value && searchRegex.test(value.toString())
-      )
-    );
+    return results[activeSection] || [];
   };
 
   // Turncate text if it exceeds the maximum length
