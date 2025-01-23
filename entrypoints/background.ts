@@ -1,14 +1,58 @@
 import { encryptData } from "@/lib/cryptoUtils";
 import { installNanoId } from "@/lib/storage";
 import { nanoid } from "nanoid";
+import { createClerkClient } from "@clerk/chrome-extension/background";
+
+const publishableKey = `pk_test_YnJpZWYtc2xvdGgtNDAuY2xlcmsuYWNjb3VudHMuZGV2JA`;
+
+if (!publishableKey) {
+  throw new Error(
+    "Please add the PLASMO_PUBLIC_CLERK_PUBLISHABLE_KEY to the .env.development file"
+  );
+}
 
 export default defineBackground(() => {
   console.log("Spotlight Search Extension Initialized", {
     id: browser.runtime.id,
   });
-  browser.sidePanel
-    .setPanelBehavior({ openPanelOnActionClick: true })
-    .catch((error) => console.error(error));
+  // Use `createClerkClient()` to create a new Clerk instance
+  // and use `getToken()` to get a fresh token for the user
+  async function getToken() {
+    const clerk = await createClerkClient({
+      publishableKey,
+    });
+
+    // If there is no valid session, then return null. Otherwise proceed.
+    if (!clerk.session) {
+      return null;
+    }
+
+    // Return the user's session
+    return await clerk.session?.user;
+  }
+
+  // Create a listener to listen for messages from content scripts
+  // It must return true, in order to keep the connection open and send a response later.
+  // NOTE: A runtime listener cannot be async.
+  browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    // This example sends the token back to the content script
+    // but you could also use the token to perform actions on behalf of the user
+    getToken()
+      .then((token) => sendResponse({ token }))
+      .catch((error) => {
+        console.error(
+          "[Background service worker] Error:",
+          JSON.stringify(error)
+        );
+        // If there is no token then send a null response
+        sendResponse({ token: null });
+      });
+    return true; // REQUIRED: Indicates that the listener responds asynchronously.
+  });
+
+  // browser.sidePanel
+  //   .setPanelBehavior({ openPanelOnActionClick: true })
+  //   .catch((error) => console.error(error));
 
   browser.runtime.setUninstallURL("https://blinkeye.app/en/goodbye", () => {});
   // Utility function to set the encrypted installation date

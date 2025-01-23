@@ -38,7 +38,6 @@ function App() {
           uickPeek
         </h1>
       </div>
-
       <div className="">
         <p className="instruction text-center mb-4">
           Use{" "}

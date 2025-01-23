@@ -1,70 +1,58 @@
-import { decryptData } from "@/lib/cryptoUtils";
-import { useState, useEffect } from "react";
-import logo from "/icon/128.png";
+import React from "react";
+import {
+  ClerkProvider,
+  SignInButton,
+  SignedIn,
+  SignedOut,
+  UserButton,
+} from "@clerk/chrome-extension";
+
+const PUBLISHABLE_KEY = `pk_test_YnJpZWYtc2xvdGgtNDAuY2xlcmsuYWNjb3VudHMuZGV2JA`;
+
+if (!PUBLISHABLE_KEY) {
+  throw new Error(
+    "Please add the PLASMO_PUBLIC_CLERK_PUBLISHABLE_KEY to the .env.development file"
+  );
+}
+
+const EXTENSION_URL = `chrome-extension://lcpkmppfkkdldambbnakpapngjabiaml`;
+
+// Custom function to execute after login
+function handleLoginSuccess() {
+  console.log("Login was successful!");
+  // Add additional functionality here
+}
 
 function App() {
-  // const [nanoId, setNanoId] = useState<string | null>(null);
-  const [installTimeValue, setInstallTimeValue] = useState<Date | null>(null);
-
-  useEffect(() => {
-    const fetchStorageData = async () => {
-      try {
-        // Fetch and decrypt installation time
-        const encryptedInstallTimeString = await storage.getItem<string>(
-          "sync:installDate"
-        );
-        if (encryptedInstallTimeString) {
-          const decryptedInstallTime = await decryptData(
-            encryptedInstallTimeString
-          );
-          const timestamp = parseInt(decryptedInstallTime);
-          setInstallTimeValue(new Date(timestamp));
-        } else {
-          setInstallTimeValue(null);
-        }
-      } catch (error) {
-        console.error("Error fetching storage data:", error);
-      }
-    };
-
-    fetchStorageData();
-  }, []);
-
   return (
-    <div className="app-container">
-      <img src={logo} alt="QuickPeek Logo" className="app-logo" />
-      <h1 className="app-title">QuickPeek</h1>
-
-      <div className="card">
-        <p className="instruction">
-          Use <span className="highlight">CTRL + M</span> /{" "}
-          <span className="highlight">Command + M</span> to launch the search
-        </p>
-
-        {/* <div className="info">
-          <h2>Nano ID</h2>
-          <p>{nanoId || "Loading..."}</p>
-        </div> */}
-
-        <div className="info">
-          <h2>Installation Time</h2>
-          <p>
-            {installTimeValue
-              ? installTimeValue.toLocaleString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                  hour: "numeric",
-                  minute: "numeric",
-                  second: "numeric",
-                  timeZoneName: "short",
-                })
-              : "No install time found"}
-          </p>
-        </div>
+    <ClerkProvider
+      publishableKey={PUBLISHABLE_KEY}
+      afterSignOutUrl={`${EXTENSION_URL}/popup.html`}
+      signInFallbackRedirectUrl={`${EXTENSION_URL}/popup.html`}
+      signUpFallbackRedirectUrl={`${EXTENSION_URL}/popup.html`}
+      signInForceRedirectUrl={`${EXTENSION_URL}/popup.html`}
+    >
+      <div className="plasmo-flex plasmo-items-center plasmo-justify-center plasmo-h-[600px] plasmo-w-[800px] plasmo-flex-col">
+        <header className="plasmo-w-full">
+          <SignedOut>
+            <SignInButton mode="redirect" />
+          </SignedOut>
+          <SignedIn>
+            <SignedInComponent onLogin={handleLoginSuccess} />
+          </SignedIn>
+        </header>
       </div>
-    </div>
+    </ClerkProvider>
   );
+}
+
+// A component that triggers the `onLogin` function when rendered
+function SignedInComponent({ onLogin }: { onLogin: () => void }) {
+  React.useEffect(() => {
+    onLogin(); // Trigger the login success function when the component mounts
+  }, [onLogin]);
+
+  return <UserButton />;
 }
 
 export default App;

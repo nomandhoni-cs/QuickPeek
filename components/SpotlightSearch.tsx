@@ -7,6 +7,7 @@ import { handleSearch } from "@/lib/searchUrl";
 import { FireIcon } from "@heroicons/react/24/solid";
 import { usePremiumFeatures } from "@/hooks/PremiumFeaturesContext";
 import GetPremiumFeature from "./GetPremiumFeature";
+import NewTab from "./BG-WorkerDemo";
 
 interface SpotlightSearchProps {
   onClose: () => void;
@@ -449,6 +450,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
         className="w-full max-w-4xl absolute top-[20%] transform transition-all px-4"
         onClick={(e) => e.stopPropagation()}
       >
+        <NewTab />
         {!isPaidUser && <TrialRemaining />}
 
         <Command
