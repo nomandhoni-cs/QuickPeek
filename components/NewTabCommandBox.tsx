@@ -14,40 +14,129 @@ import {
   CheckSquare,
   Moon,
   Sun,
+  Bookmark,
+  Clock,
+  Download,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-// Tab configuration interface
 interface TabConfig {
   id: string;
   label: string;
   icon?: React.ReactNode;
 }
 
+interface CommandItemData {
+  id: string;
+  label: string;
+  icon: React.ReactNode;
+  metadata?: string;
+  tabId: string;
+  group?: string;
+}
+
 export default function NewTabCommandBox() {
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeTab, setActiveTab] = useState("recents");
   const [isOpen, setIsOpen] = useState(true);
+  const [items, setItems] = useState<CommandItemData[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const commandRef = useRef<HTMLDivElement>(null);
 
-  // Tab configurations
-  const tabs: TabConfig[] = [
-    { id: "all", label: "All" },
-    { id: "documents", label: "Documents" },
-    { id: "actions", label: "Actions" },
-    { id: "contacts", label: "Contacts" },
+  // Demo data
+  const demoData: CommandItemData[] = [
+    // Recents (shows mixed recent items)
+    {
+      id: "1",
+      label: "Draft an email",
+      icon: <Mail className="mr-2 h-4 w-4 text-blue-400" />,
+      metadata: "Action",
+      tabId: "recents",
+      group: "Actions",
+    },
+    {
+      id: "2",
+      label: "mydoc.pdf",
+      icon: <FileText className="mr-2 h-4 w-4 text-purple-400" />,
+      metadata: "4564 KB",
+      tabId: "recents",
+      group: "Documents",
+    },
+    // Tabs
+    {
+      id: "3",
+      label: "Project Dashboard",
+      icon: <FileText className="mr-2 h-4 w-4 text-green-400" />,
+      metadata: "chrome-extension://...",
+      tabId: "tabs",
+    },
+    // Bookmarks
+    {
+      id: "4",
+      label: "Important Docs",
+      icon: <Bookmark className="mr-2 h-4 w-4 text-red-400" />,
+      metadata: "https://company.com/docs",
+      tabId: "bookmarks",
+    },
+    // History
+    {
+      id: "5",
+      label: "Visited Today",
+      icon: <Clock className="mr-2 h-4 w-4 text-yellow-400" />,
+      metadata: "https://github.com",
+      tabId: "history",
+    },
+    // Downloads
+    {
+      id: "6",
+      label: "report.pdf",
+      icon: <Download className="mr-2 h-4 w-4 text-blue-400" />,
+      metadata: "Downloaded 2h ago",
+      tabId: "downloads",
+    },
   ];
+
+  const tabs: TabConfig[] = [
+    { id: "recents", label: "Recents" },
+    { id: "tabs", label: "Tabs" },
+    { id: "bookmarks", label: "Bookmarks" },
+    { id: "history", label: "History" },
+    { id: "downloads", label: "Downloads" },
+  ];
+
+  // Group items by their group property
+  const groupedItems = items.reduce((acc, item) => {
+    const group = item.group || "General";
+    if (!acc[group]) acc[group] = [];
+    acc[group].push(item);
+    return acc;
+  }, {} as Record<string, CommandItemData[]>);
+
+  useEffect(() => {
+    // Simulate data fetching based on active tab
+    const fetchData = () => {
+      // In real implementation, you'd fetch from API here
+      const filteredData =
+        activeTab === "recents"
+          ? demoData
+          : demoData.filter((item) => item.tabId === activeTab);
+
+      setItems(filteredData);
+    };
+
+    fetchData();
+  }, [activeTab]);
 
   // Tab functions - will be executed when tab changes
   const tabFunctions = {
-    all: () => console.log("All tab activated"),
-    documents: () => console.log("Documents tab activated"),
-    actions: () => console.log("Actions tab activated"),
-    contacts: () => console.log("Contacts tab activated"),
+    recents: () => console.log("Recents tab activated"),
+    tabs: () => console.log("Tabs tab activated"),
+    bookmarks: () => console.log("Bookmarks tab activated"),
+    history: () => console.log("History tab activated"),
+    downloads: () => console.log("Downloads tab activated"),
   };
 
   useEffect(() => {
@@ -123,10 +212,10 @@ export default function NewTabCommandBox() {
         </Button>
       </div>
 
-      <div className="relative h-full w-full flex items-start justify-center px-4 pt-32">
+      <div className="relative h-full w-full flex items-start justify-center px-4 pt-32 rounded-lg">
         {isOpen && (
           <div
-            className="w-full max-w-[800px] animate-in fade-in-0 slide-in-from-top-4 duration-200 relative"
+            className="w-full max-w-[800px] animate-in fade-in-0 slide-in-from-top-4 duration-200 relative rounded-xl"
             ref={commandRef}
           >
             <Command
@@ -167,59 +256,23 @@ export default function NewTabCommandBox() {
               <div className="overflow-y-auto max-h-[60vh]">
                 <CommandList>
                   <CommandEmpty>No results found.</CommandEmpty>
-                  {(activeTab === "all" || activeTab === "actions") && (
-                    <CommandGroup heading="Recent Actions">
-                      <CommandItem>
-                        <Mail className="mr-2 h-4 w-4 text-blue-400" />
-                        <span>Draft an email</span>
-                        <span className="ml-auto text-xs text-muted-foreground">
-                          Action
-                        </span>
-                      </CommandItem>
-                      <CommandItem>
-                        <CheckSquare className="mr-2 h-4 w-4 text-green-400" />
-                        <span>Create a task</span>
-                        <span className="ml-auto text-xs text-muted-foreground">
-                          Action
-                        </span>
-                      </CommandItem>
-                    </CommandGroup>
-                  )}
-                  {(activeTab === "all" || activeTab === "documents") && (
-                    <CommandGroup heading="Documents">
-                      <CommandItem>
-                        <FileText className="mr-2 h-4 w-4 text-purple-400" />
-                        <span>mydoc.pdf</span>
-                        <span className="ml-auto text-xs text-muted-foreground">
-                          4564 KB
-                        </span>
-                      </CommandItem>
-                      <CommandItem>
-                        <FileText className="mr-2 h-4 w-4 text-purple-400" />
-                        <span>design_brief.pdf</span>
-                        <span className="ml-auto text-xs text-muted-foreground">
-                          2890 KB
-                        </span>
-                      </CommandItem>
-                    </CommandGroup>
-                  )}
-                  {(activeTab === "all" || activeTab === "contacts") && (
-                    <CommandGroup heading="Contacts">
-                      <CommandItem>
-                        <UserCircle2 className="mr-2 h-4 w-4 text-orange-400" />
-                        <span>Alice Johnson</span>
-                        <span className="ml-auto text-xs text-muted-foreground">
-                          alice@example.com
-                        </span>
-                      </CommandItem>
-                      <CommandItem>
-                        <UserCircle2 className="mr-2 h-4 w-4 text-orange-400" />
-                        <span>Bob Smith</span>
-                        <span className="ml-auto text-xs text-muted-foreground">
-                          bob@example.com
-                        </span>
-                      </CommandItem>
-                    </CommandGroup>
+
+                  {Object.entries(groupedItems).map(
+                    ([groupName, groupItems]) => (
+                      <CommandGroup key={groupName} heading={groupName}>
+                        {groupItems.map((item) => (
+                          <CommandItem key={item.id}>
+                            {item.icon}
+                            <span>{item.label}</span>
+                            {item.metadata && (
+                              <span className="ml-auto text-xs text-muted-foreground">
+                                {item.metadata}
+                              </span>
+                            )}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    )
                   )}
                 </CommandList>
               </div>
