@@ -1,8 +1,12 @@
-import CommandDemo from "@/components/page";
+import { ThemeProvider as NextThemesProvider } from "next-themes";
+import type { ThemeProviderProps } from "next-themes";
+import NewTabCommandBox from "@/components/NewTabCommandBox";
 const App = () => {
   return (
     <>
-      <CommandDemo />
+      <NextThemesProvider attribute="class" defaultTheme="system" enableSystem>
+        <NewTabCommandBox />
+      </NextThemesProvider>
     </>
   );
 };
