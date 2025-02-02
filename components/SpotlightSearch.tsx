@@ -452,7 +452,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
         {!isPaidUser && <TrialRemaining />}
 
         <Command
-          className="rounded-xl border shadow-xl bg-white dark:bg-black overflow-hidden"
+          className="rounded-xl border shadow-xl bg-transparent blur-xl overflow-hidden"
           onKeyDown={handleKeyDown}
         >
           {/* Search Input Section */}
