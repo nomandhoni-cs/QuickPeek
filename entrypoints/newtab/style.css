@@ -1,0 +1,126 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5.9% 10%;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+  }
+}
+
+@layer utilities {
+  .bg-gradient {
+    background: linear-gradient(135deg, #ff61d8 0%, #6b8de3 50%, #8ed6fb 100%);
+  }
+
+  .bg-dark-gradient {
+    background: linear-gradient(135deg, #5b0e58 0%, #0f1c61 50%, #006c8b 100%);
+  }
+
+  .bg-gradient-animated {
+    background: linear-gradient(-45deg, rgba(255, 97, 216, 0.3), rgba(107, 141, 227, 0.3), rgba(142, 214, 251, 0.3));
+    background-size: 400% 400%;
+    animation: gradient 15s ease infinite;
+  }
+
+  .bg-dark-gradient-animated {
+    background: linear-gradient(-45deg, rgba(91, 14, 88, 0.3), rgba(15, 28, 97, 0.3), rgba(0, 108, 139, 0.3));
+    background-size: 400% 400%;
+    animation: gradient 15s ease infinite;
+  }
+
+  .glassmorphism {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  }
+
+  .dark .glassmorphism {
+    background: rgba(23, 23, 23, 0.2);
+  }
+
+  @keyframes gradient {
+    0% {
+      background-position: 0% 50%;
+    }
+
+    50% {
+      background-position: 100% 50%;
+    }
+
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  .animate-pulse-border {
+    position: relative;
+  }
+
+  .animate-pulse-border::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(90deg, #ff61d8, #6b8de3, #8ed6fb, #ff61d8);
+    background-size: 400% 400%;
+    animation: pulse-border 8s linear infinite;
+    border-radius: calc(var(--radius) + 2px);
+    z-index: -1;
+  }
+
+  .dark .animate-pulse-border::before {
+    background: linear-gradient(90deg, #5b0e58, #0f1c61, #006c8b, #5b0e58);
+  }
+
+  @keyframes pulse-border {
+    0% {
+      background-position: 0% 50%;
+    }
+
+    100% {
+      background-position: 400% 50%;
+    }
+  }
+}

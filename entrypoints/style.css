@@ -1,6 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 #quickpeek-search-container {
   position: fixed;
   top: 0;
@@ -8,17 +9,17 @@
   width: 100vw;
   height: 100vh;
   z-index: 999999;
-  backdrop-filter: blur(10px); /* Equivalent to backdrop-blur-md */
-  background-color: rgba(
-    0,
-    0,
-    0,
-    0.8
-  ); /* Change alpha to 0.7 for a slightly more opaque background */
+  backdrop-filter: blur(10px);
+  /* Equivalent to backdrop-blur-md */
+  background-color: rgba(0,
+      0,
+      0,
+      0.8);
+  /* Change alpha to 0.7 for a slightly more opaque background */
 }
 
 @layer base {
-  :root {
+  /* :root {
     --background: 0 0% 100%;
     --foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96.1%;
@@ -39,9 +40,9 @@
     --destructive-foreground: 210 40% 98%;
     --ring: 215 20.2% 65.1%;
     --radius: 0.5rem;
-  }
+  } */
 
-  .dark {
+  :root {
     --background: 224 71% 4%;
     --foreground: 213 31% 91%;
     --muted: 223 47% 11%;
@@ -61,6 +62,7 @@
     --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
     --ring: 216 34% 17%;
+    --radius: 0.5rem;
   }
 }
 
@@ -68,7 +70,175 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .aurora-container {
+    position: absolute;
+    inset: 0;
+    filter: blur(40px);
+    mask: linear-gradient(black, transparent 80%);
+  }
+
+  .aurora-1,
+  .aurora-2,
+  .aurora-3,
+  .aurora-4 {
+    position: absolute;
+    border-radius: 50%;
+    width: 100%;
+    height: 100%;
+    mix-blend-mode: darken;
+    animation: aurora-border 20s linear infinite;
+  }
+
+  .aurora-1 {
+    background: radial-gradient(circle at 50% 50%, rgba(255, 107, 107, 0.5), rgba(255, 107, 107, 0) 70%);
+  }
+
+  .aurora-2 {
+    background: radial-gradient(circle at 50% 50%, rgba(78, 205, 196, 0.5), rgba(78, 205, 196, 0) 70%);
+    animation-delay: -5s;
+  }
+
+  .aurora-3 {
+    background: radial-gradient(circle at 50% 50%, rgba(69, 183, 209, 0.5), rgba(69, 183, 209, 0) 70%);
+    animation-delay: -10s;
+  }
+
+  .aurora-4 {
+    background: radial-gradient(circle at 50% 50%, rgba(26, 83, 92, 0.5), rgba(26, 83, 92, 0) 70%);
+    animation-delay: -15s;
+  }
+
+  @keyframes aurora-border {
+    0% {
+      transform: rotate(0deg);
+    }
+
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  .bg-gradient {
+    background: linear-gradient(135deg, #ff61d8 0%, #6b8de3 50%, #8ed6fb 100%);
+  }
+
+  .bg-dark-gradient {
+    background: linear-gradient(135deg, #5b0e58 0%, #0f1c61 50%, #006c8b 100%);
+  }
+
+  .bg-gradient-animated {
+    background: linear-gradient(-45deg, rgba(255, 97, 216, 0.3), rgba(107, 141, 227, 0.3), rgba(142, 214, 251, 0.3));
+    background-size: 400% 400%;
+    animation: gradient 15s ease infinite;
+  }
+
+  .bg-dark-gradient-animated {
+    background: linear-gradient(-45deg, rgba(91, 14, 88, 0.3), rgba(15, 28, 97, 0.3), rgba(0, 108, 139, 0.3));
+    background-size: 400% 400%;
+    animation: gradient 15s ease infinite;
+  }
+
+  .glassmorphism {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  }
+
+  .dark .glassmorphism {
+    background: rgba(23, 23, 23, 0.2);
+  }
+
+  @keyframes gradient {
+    0% {
+      background-position: 0% 50%;
+    }
+
+    50% {
+      background-position: 100% 50%;
+    }
+
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  .animate-pulse-border {
+    position: relative;
+  }
+
+  .animate-pulse-border::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(90deg, #ff61d8, #6b8de3, #8ed6fb, #ff61d8);
+    background-size: 400% 400%;
+    animation: pulse-border 8s linear infinite;
+    border-radius: calc(var(--radius) + 2px);
+    z-index: -1;
+  }
+
+  .dark .animate-pulse-border::before {
+    background: linear-gradient(90deg, #5b0e58, #0f1c61, #006c8b, #5b0e58);
+  }
+
+  @keyframes pulse-border {
+    0% {
+      background-position: 0% 50%;
+    }
+
+    100% {
+      background-position: 400% 50%;
+    }
+  }
+}
+@keyframes flowGradient1 {
+  0% {
+    transform: translate(0, 0);
+  }
+
+  25% {
+    transform: translate(25%, 15%);
+  }
+
+  50% {
+    transform: translate(15%, 35%);
+  }
+
+  75% {
+    transform: translate(-15%, 25%);
+  }
+
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes flowGradient2 {
+  0% {
+    transform: translate(0, 0);
+  }
+
+  25% {
+    transform: translate(-25%, -15%);
+  }
+
+  50% {
+    transform: translate(-15%, -35%);
+  }
+
+  75% {
+    transform: translate(15%, -25%);
+  }
+
+  100% {
+    transform: translate(0, 0);
   }
 }

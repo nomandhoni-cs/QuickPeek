@@ -6,6 +6,19 @@ export default defineBackground(() => {
   console.log("Spotlight Search Extension Initialized", {
     id: browser.runtime.id,
   });
+  // Open The new tab with QuickPeek
+  browser.tabs.onCreated.addListener((tab) => {
+    // Ensure the tab has an ID and is blank (about:blank or about:newtab)
+    if (
+      tab.id !== undefined &&
+      (tab.url === "about:blank" || tab.url === "chrome://newtab/")
+    ) {
+      // Replace '/newtab.html' with the path to your HTML file
+      browser.tabs.update(tab.id, {
+        url: browser.runtime.getURL("/newtab.html"),
+      });
+    }
+  });
   browser.sidePanel
     .setPanelBehavior({ openPanelOnActionClick: true })
     .catch((error) => console.error(error));
@@ -179,6 +192,18 @@ export default defineBackground(() => {
       }
 
       return true;
+    }
+    // Fetch Top Sites
+    if (message.action === "fetchTopSites") {
+      chrome.topSites.get((topSites) => {
+        sendResponse({
+          topSites: topSites.map((site) => ({
+            title: site.title || "Untitled",
+            url: site.url,
+          })),
+        });
+      });
+      return true; // Indicates asynchronous response
     }
 
     if (message.action === "tabAction") {

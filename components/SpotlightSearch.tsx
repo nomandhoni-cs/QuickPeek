@@ -1,5 +1,13 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Command, CommandInput } from "./ui/command";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "./ui/scroll-area";
 import TrialRemaining from "./TrialRemaining";
 import RowSkeleton from "./RowSkeleton";
@@ -7,6 +15,7 @@ import { handleSearch } from "@/lib/searchUrl";
 import { FireIcon } from "@heroicons/react/24/solid";
 import { usePremiumFeatures } from "@/hooks/PremiumFeaturesContext";
 import GetPremiumFeature from "./GetPremiumFeature";
+// import NewTab from "./BG-WorkerDemo";
 
 interface SpotlightSearchProps {
   onClose: () => void;
@@ -316,26 +325,28 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
       "downloads",
     ];
     return (
-      <div className="flex border-b sticky top-0 bg-white z-10">
-        {sections.map((section) => (
-          <button
-            key={section}
-            className={`flex-1 p-2 capitalize flex items-center justify-center gap-1 ${
-              activeSection === section
-                ? "bg-[#32CD32] text-black font-semibold"
-                : "hover:bg-green-300"
-            }`}
-            onClick={() => {
-              setActiveSection(section);
-            }}
-          >
-            {section}
-            {section !== "recent" && (
-              <FireIcon className="h-4 w-4 text-amber-400" />
-            )}
-          </button>
-        ))}
-      </div>
+      <>
+        <div className="flex border-b sticky top-0 bg-transparent z-10">
+          {sections.map((section) => (
+            <button
+              key={section}
+              className={`flex-1 p-2 capitalize flex items-center justify-center gap-1 ${
+                activeSection === section
+                  ? " text-gray-100 font-semibold"
+                  : "hover:bg-green-300"
+              }`}
+              onClick={() => {
+                setActiveSection(section);
+              }}
+            >
+              {section}
+              {section !== "recent" && (
+                <FireIcon className="h-4 w-4 text-amber-400" />
+              )}
+            </button>
+          ))}
+        </div>
+      </>
     );
   };
 
@@ -408,7 +419,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
           ref={index === selectedItemIndex ? selectedItemRef : null}
           className={`flex items-center p-2 rounded-lg border cursor-pointer ${
             index === selectedItemIndex && hasArrowKeyPressed
-              ? "bg-green-200 border-green-300"
+              ? "bg-gray-800 border-green-300 text-gray-100"
               : "hover:bg-green-300"
           }`}
           onClick={() => {
@@ -446,20 +457,21 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
       onClick={onClose}
     >
       <div
-        className="w-full max-w-4xl absolute top-[20%] transform transition-all px-4"
+        className="w-full max-w-4xl absolute top-[20%] transform transition-all px-4 animate-in fade-in-0 slide-in-from-top-4 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* <NewTab /> */}
         {!isPaidUser && <TrialRemaining />}
 
         <Command
-          className="rounded-xl border shadow-xl bg-white dark:bg-black overflow-hidden"
+          className="rounded-lg border border-gray-500/20 overflow-hidden flex flex-col bg-gray-500/15"
           onKeyDown={handleKeyDown}
         >
           {/* Search Input Section */}
-          <div className="sticky top-0 z-20 bg-white dark:bg-black border-b">
+          <div className="sticky top-0 z-20">
             <CommandInput
               placeholder="Search tabs, history, bookmarks, downloads, or enter a URL..."
-              className="h-16 px-1 border-none focus:ring-0 font-semibold text-base"
+              className="w-full h-16 bg-transparent text-gray-100 placeholder-gray-400"
               value={input}
               onValueChange={setInput}
               onKeyDown={(e) => {

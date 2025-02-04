@@ -4,10 +4,14 @@ module.exports = {
   content: ["src/**/*.{ts,tsx}", "entrypoints/**/*.{ts,tsx}", "components/**/*.{ts,tsx}"],
   theme: {
     extend: {
+      animation: {
+        'flow-gradient': 'flowGradient1 20s ease-in-out infinite',
+        'flow-gradient-alt': 'flowGradient2 25s ease-in-out infinite',
+      },
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
+        border: 'hsl(var(--border))',
+        input: 'hsl(var(--input))',
+        ring: 'hsl(var(--ring))',
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
