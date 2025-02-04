@@ -171,7 +171,7 @@ export default function ShortcutManager() {
               <img
                 src={shortcut.favicon || "/placeholder.svg"}
                 alt={shortcut.title}
-                className="w-full h-full object-contain"
+                className="w-full h-full rounded-full object-contain"
                 onError={(e) => {
                   const img = e.target as HTMLImageElement;
                   img.src = "/placeholder.svg";
@@ -190,9 +190,9 @@ export default function ShortcutManager() {
           <div className="flex items-center justify-center h-28">
             <Button
               variant="ghost"
-              className="w-full h-full rounded-lg hover:bg-black/5 dark:hover:bg-white/5 flex flex-col items-center justify-center gap-2"
+              className="w-full h-full rounded-lg hover:bg-black/5 dark:hover:bg-white/5 flex flex-col items-center justify-between gap-2"
             >
-              <Plus className="h-6 w-6" />
+              <Plus className="h-6 w-6 mt-6 border border-gray-300 dark:border-gray-600 rounded-full" />
               <span className="text-sm">Add shortcut</span>
             </Button>
           </div>
