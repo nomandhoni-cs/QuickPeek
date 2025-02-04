@@ -14,7 +14,6 @@ export default defineConfig({
       "tabs",
       "downloads",
       "sidePanel",
-      "topSites",
     ],
     host_permissions: ["<all_urls>"],
   },
