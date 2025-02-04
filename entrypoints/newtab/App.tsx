@@ -1,12 +1,12 @@
-import { ThemeProvider as NextThemesProvider } from "next-themes";
-import type { ThemeProviderProps } from "next-themes";
+import MouseMoveEffect from "@/components/mouse-move-effect";
 import NewTabCommandBox from "@/components/NewTabCommandBox";
+import ShortcutManager from "@/components/shortcut-manager-wxt";
 const App = () => {
   return (
     <>
-      <NextThemesProvider attribute="class" defaultTheme="system" enableSystem>
-        <NewTabCommandBox />
-      </NextThemesProvider>
+      {/* <MouseMoveEffect /> */}
+      <NewTabCommandBox />
+      <ShortcutManager />
     </>
   );
 };

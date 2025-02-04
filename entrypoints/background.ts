@@ -193,6 +193,18 @@ export default defineBackground(() => {
 
       return true;
     }
+    // Fetch Top Sites
+    if (message.action === "fetchTopSites") {
+      chrome.topSites.get((topSites) => {
+        sendResponse({
+          topSites: topSites.map((site) => ({
+            title: site.title || "Untitled",
+            url: site.url,
+          })),
+        });
+      });
+      return true; // Indicates asynchronous response
+    }
 
     if (message.action === "tabAction") {
       const { tabId, tabAction } = message;
