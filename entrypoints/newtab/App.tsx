@@ -1,13 +1,13 @@
-import MouseMoveEffect from "@/components/mouse-move-effect";
 import NewTabCommandBox from "@/components/NewTabCommandBox";
 import ShortcutManager from "@/components/shortcut-manager-wxt";
 const App = () => {
   return (
-    <>
-      {/* <MouseMoveEffect /> */}
+    <div>
       <NewTabCommandBox />
-      <ShortcutManager />
-    </>
+      <div className="mt-40">
+        <ShortcutManager />
+      </div>
+    </div>
   );
 };
 

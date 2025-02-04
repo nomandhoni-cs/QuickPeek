@@ -56,7 +56,6 @@ export default function NewTabCommandBox() {
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState("recents");
   const [isOpen, setIsOpen] = useState(true);
-  const [items, setItems] = useState<CommandItemData[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const commandRef = useRef<HTMLDivElement>(null);
   const [results, setResults] = useState<SearchResult | null>(null);
@@ -70,7 +69,6 @@ export default function NewTabCommandBox() {
     { id: "history", label: "History" },
     { id: "downloads", label: "Downloads" },
   ];
-
   // Fetch results based on input
   const fetchResults = useCallback(
     async (searchTerm: string) => {
@@ -278,21 +276,21 @@ export default function NewTabCommandBox() {
           ref={commandRef}
         >
           <Command
-            className="rounded-lg border-0 shadow-2xl overflow-hidden flex flex-col"
+            className="rounded-full border border-gray-500/20 shadow-2xl overflow-hidden flex flex-col bg-gray-900/40 backdrop-blur-sm"
             onKeyDown={handleKeyDown}
           >
             <div className="flex flex-col flex-none">
-              <div className="border-b border-border/20">
+              <div className="">
                 <CommandInput
                   ref={inputRef}
-                  placeholder="Search for anything, tabs, history, bookmarks, downloaded files..."
-                  className="w-full"
-                  onValueChange={(e) =>
+                  placeholder="Search for anything whatever you want 🔍🌎"
+                  className="w-full h-16 text-base bg-transparent text-gray-100 placeholder-gray-300"
+                  onValueChange={() =>
                     fetchResults(inputRef.current?.value || "")
                   }
                 />
               </div>
-              <div className="border-b border-border/20">
+              {/* <div className="border-b border-gray-600/20">
                 <Tabs
                   value={activeTab}
                   onValueChange={(value) => {
@@ -306,35 +304,44 @@ export default function NewTabCommandBox() {
                       <TabsTrigger
                         key={tab.id}
                         value={tab.id}
-                        className="data-[state=active]:bg-accent/30"
+                        className="text-gray-300 data-[state=active]:bg-gray-700/50 data-[state=active]:text-gray-100 hover:bg-gray-700/30 transition-colors"
                       >
                         {tab.label}
                       </TabsTrigger>
                     ))}
                   </TabsList>
                 </Tabs>
-              </div>
+              </div> */}
             </div>
-            <div className="overflow-y-auto max-h-[80vh]">
-              <CommandList>
-                <CommandEmpty>No results found.</CommandEmpty>
+            {/* <div className="overflow-y-auto max-h-[80vh] p-2">
+              <CommandList className="bg-transparent">
+                <CommandEmpty className="text-gray-400">
+                  No results found.
+                </CommandEmpty>
                 {Object.entries(groupedItems).map(([groupName, groupItems]) => (
-                  <CommandGroup key={groupName} heading={groupName}>
+                  <CommandGroup
+                    key={groupName}
+                    heading={groupName}
+                    className="text-gray-400"
+                  >
                     {groupItems.map((item) => (
-                      <CommandItem key={item.id}>
+                      <CommandItem
+                        key={item.id}
+                        className="text-gray-200 hover:bg-gray-700/40 cursor-pointer"
+                      >
                         {item.icon}
                         <span>{item.label}</span>
                         {item.metadata && (
-                          <span className="ml-auto text-xs text-muted-foreground">
+                          <span className="ml-auto text-xs text-gray-400">
                             {item.metadata}
                           </span>
                         )}
                       </CommandItem>
                     ))}
-                  </CommandGroup>
-                ))}
-              </CommandList>
-            </div>
+                    </CommandGroup>
+                    ))}
+                    </CommandList>
+                    </div> */}
           </Command>
         </div>
       )}
