@@ -7,10 +7,8 @@ import NewTabSetting from "@/components/NewTabSetting";
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <main className="relative min-h-screen bg-background">
-      {" "}
       {/* Apply bg-background to main */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        {/* Background gradient layers - adjusted for glassmorphism */}
         <div className="absolute inset-0 bg-gradient-to-b from-background via-background/90 to-background" />
         <div
           className="absolute right-0 top-0 h-[500px] w-[500px] bg-blue-500/10 blur-[150px] animate-move-gradient" /* Increased blur */
@@ -24,7 +22,6 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             animation: "moveGradient2 20s ease infinite",
           }}
         />
-        {/* Add more gradient layers for depth and fancier look */}
         <div
           className="absolute top-1/4 left-1/4 h-[300px] w-[300px] bg-green-500/5 blur-[100px] animate-move-gradient"
           style={{
@@ -41,14 +38,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         />
       </div>
       <div className="relative z-10 p-8 glassmorphism-dark">
-        {" "}
-        {/* Apply glassmorphism-dark to the content container */}
         <App />
       </div>
-      {/* Place NewTabSetting (SettingsButton) at the bottom right corner */}
       <div className="absolute bottom-4 right-4 z-20 glassmorphism-dark">
-        {" "}
-        {/* Apply glassmorphism-dark to the settings button container too */}
         <NewTabSetting />
       </div>
     </main>
