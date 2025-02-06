@@ -2,54 +2,131 @@
 @tailwind components;
 @tailwind utilities;
 
+#quickpeek-search-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 999999;
+  backdrop-filter: blur(10px);
+  /* Equivalent to backdrop-blur-md */
+  background-color: rgba(0,
+      0,
+      0,
+      0.8);
+  /* Change alpha to 0.7 for a slightly more opaque background */
+}
+
 @layer base {
-  :root {
+  /* :root {
     --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
-    --radius: 0.75rem;
+    --popover-foreground: 222.2 47.4% 11.2%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 47.4% 11.2%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 210 40% 98%;
+    --ring: 215 20.2% 65.1%;
+    --radius: 0.5rem;
+  } */
+
+  :root {
+    --background: 224 71% 4%;
+    /* Dark background */
+    --foreground: 213 31% 91%;
+    /* Light text color */
+    --muted: 223 47% 11%;
+    --muted-foreground: 215.4 16.3% 56.9%;
+    --accent: 216 34% 17%;
+    --accent-foreground: 210 40% 98%;
+    --popover: 224 71% 4%;
+    --popover-foreground: 215 20.2% 65.1%;
+    --border: 216 34% 17%;
+    --input: 216 34% 17%;
+    --card: 224 71% 4%;
+    --card-foreground: 213 31% 91%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 1.2%;
+    --secondary: 222.2 47.4% 11.2%;
+    --secondary-foreground: 210 40% 98%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+    --ring: 216 34% 17%;
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
   }
 
-  .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
   }
 }
 
 @layer utilities {
+  .aurora-container {
+    position: absolute;
+    inset: 0;
+    filter: blur(40px);
+    mask: linear-gradient(black, transparent 80%);
+  }
+
+  .aurora-1,
+  .aurora-2,
+  .aurora-3,
+  .aurora-4 {
+    position: absolute;
+    border-radius: 50%;
+    width: 100%;
+    height: 100%;
+    mix-blend-mode: darken;
+    animation: aurora-border 20s linear infinite;
+  }
+
+  .aurora-1 {
+    background: radial-gradient(circle at 50% 50%, rgba(255, 107, 107, 0.5), rgba(255, 107, 107, 0) 70%);
+  }
+
+  .aurora-2 {
+    background: radial-gradient(circle at 50% 50%, rgba(78, 205, 196, 0.5), rgba(78, 205, 196, 0) 70%);
+    animation-delay: -5s;
+  }
+
+  .aurora-3 {
+    background: radial-gradient(circle at 50% 50%, rgba(69, 183, 209, 0.5), rgba(69, 183, 209, 0) 70%);
+    animation-delay: -10s;
+  }
+
+  .aurora-4 {
+    background: radial-gradient(circle at 50% 50%, rgba(26, 83, 92, 0.5), rgba(26, 83, 92, 0) 70%);
+    animation-delay: -15s;
+  }
+
+  @keyframes aurora-border {
+    0% {
+      transform: rotate(0deg);
+    }
+
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
   .bg-gradient {
     background: linear-gradient(135deg, #ff61d8 0%, #6b8de3 50%, #8ed6fb 100%);
   }
@@ -70,16 +147,26 @@
     animation: gradient 15s ease infinite;
   }
 
-  .glassmorphism {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+  .glassmorphism-dark {
+    /* Glassmorphism for dark theme */
+    background-color: rgba(23, 23, 23, 0.2);
+    /* Black background with 20% opacity */
+    backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    /* 1px white border with 10% opacity */
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
   }
 
-  .dark .glassmorphism {
-    background: rgba(23, 23, 23, 0.2);
+  .glassmorphism-light {
+    /* Glassmorphism for light theme (if needed) */
+    background-color: rgba(255, 255, 255, 0.3);
+    /* White background with 30% opacity */
+    backdrop-filter: blur(24px);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    /* 1px black border with 10% opacity */
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
   }
+
 
   @keyframes gradient {
     0% {
@@ -122,5 +209,46 @@
     100% {
       background-position: 400% 50%;
     }
+  }
+}
+
+
+@keyframes moveGradient1 {
+
+  0%,
+  100% {
+    transform: translate(0%, 0%) rotate(0deg);
+  }
+
+  25% {
+    transform: translate(20%, 10%) rotate(10deg) scale(1.1);
+  }
+
+  50% {
+    transform: translate(-10%, 20%) rotate(-5deg) scale(1.2);
+  }
+
+  75% {
+    transform: translate(15%, -15%) rotate(3deg) scale(1.1);
+  }
+}
+
+@keyframes moveGradient2 {
+
+  0%,
+  100% {
+    transform: translate(0%, 0%) rotate(0deg);
+  }
+
+  25% {
+    transform: translate(-15%, -20%) rotate(-8deg) scale(1.1);
+  }
+
+  50% {
+    transform: translate(25%, -5%) rotate(5deg) scale(1.2);
+  }
+
+  75% {
+    transform: translate(-20%, 15%) rotate(-2deg) scale(1.1);
   }
 }
