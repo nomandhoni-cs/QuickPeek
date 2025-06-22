@@ -2,6 +2,7 @@ import { storage } from "wxt/storage";
 
 // Create an async function to handle the retrieval of the search engine and the search logic
 export const handleSearch = async (trimmedValue: string) => {
+  console.log(trimmedValue, 'sfdas')
   // Retrieve the saved search engine asynchronously
   const savedSearchEngine = await storage.getItem("sync:defaultSearchEngine");
 

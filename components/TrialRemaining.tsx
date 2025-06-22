@@ -71,7 +71,7 @@ const TrialRemaining = () => {
               className="bg-yellow-500 text-black ml-2 hover:bg-yellow-600"
               asChild
             >
-              <a href="https://quickpeek.vercel.app/pricing" target="_blank">
+              <a href="https://blinkeye.lemonsqueezy.com/buy/fdb56430-a71d-4f25-9bd5-08ca19d29298" target="_blank">
                 <FireIcon className="w-4 h-4" />
                 Upgrade
               </a>

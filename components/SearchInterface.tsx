@@ -17,6 +17,7 @@ import {
 import { SiGooglekeep, SiGooglecalendar, SiGooglemeet, SiGmail } from '@icons-pack/react-simple-icons';
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { handleSearch } from "@/lib/searchUrl";
 
 interface MenuItem {
     id: string
@@ -398,12 +399,6 @@ export default function SearchInterface() {
         return urlRegex.test(string.trim())
     }
 
-    // Handle search function (placeholder - you'll replace this with your actual function)
-    const handleSearch = (query: string) => {
-        console.log("Searching for:", query)
-        // Your existing search logic goes here
-    }
-
     // Fetch search suggestions using DuckDuckGo
     const fetchSearchSuggestions = useCallback(async (query: string) => {
         if (!query.trim() || isValidUrl(query)) {
@@ -482,6 +477,7 @@ export default function SearchInterface() {
             const url = trimmedValue.includes("://") ? trimmedValue : `https://${trimmedValue}`
             window.open(url, "_blank")
         } else {
+            console.log(trimmedValue)
             handleSearch(trimmedValue)
         }
 
