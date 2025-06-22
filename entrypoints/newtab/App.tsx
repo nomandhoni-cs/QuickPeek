@@ -1,11 +1,11 @@
-import NewTabCommandBox from "@/components/NewTabCommandBox";
 import ShortcutManager from "@/components/shortcut-manager-wxt";
 import ChromeTopSites from "@/components/ChromeTopSites";
+import SearchInterface from "@/components/SearchInterface";
 const App = () => {
   return (
-    <div>
-      <NewTabCommandBox />
-      <div className="mt-52">
+    <div className="h-screen flex items-center justify-center">
+      <div>
+        <SearchInterface />
         <ChromeTopSites />
         <ShortcutManager />
       </div>

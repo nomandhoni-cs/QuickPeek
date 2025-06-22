@@ -6,7 +6,7 @@ import { FireIcon } from "@heroicons/react/24/solid";
 const TrialRemaining = () => {
   const [installTimeValue, setInstallTimeValue] = useState<Date | null>(null);
   const [trialRemaining, setTrialRemaining] = useState<string | null>(null);
-  const trialPeriod = 30; // 30-day trial
+  const trialPeriod = 7; // 7-day trial
 
   useEffect(() => {
     const fetchInstallTime = async () => {

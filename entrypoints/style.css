@@ -242,3 +242,20 @@
     transform: translate(0, 0);
   }
 }
+
+/* Custom scrollbar for menu items */
+.max-h-64::-webkit-scrollbar {
+  width: 6px;
+}
+
+.max-h-64::-webkit-scrollbar-track {
+  @apply bg-muted/30;
+}
+
+.max-h-64::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/30 rounded-full;
+}
+
+.max-h-64::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted-foreground/50;
+}
