@@ -15,6 +15,7 @@ export default defineConfig({
       "downloads",
       "sidePanel",
       "topSites",
+      "unlimitedStorage",
     ],
     host_permissions: ["<all_urls>"],
   },
