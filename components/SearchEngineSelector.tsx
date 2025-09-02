@@ -1,78 +1,73 @@
+// SearchEngineSelector.tsx - Fixed version without style jsx
 import { CheckIcon } from "@heroicons/react/16/solid";
 import React, { useEffect, useState } from "react";
 import { storage } from "wxt/storage";
 
 const searchEngines = [
-  { name: "Google", url: "https://www.google.com", icon: "google" },
-  { name: "Ecosia", url: "https://www.ecosia.org", icon: "ecosia" },
-  { name: "DuckDuckGo", url: "https://duckduckgo.com", icon: "duckduckgo" },
-  { name: "Bing", url: "https://www.bing.com", icon: "bing" },
+  { name: "Google", url: "https://www.google.com", color: "from-blue-400 to-blue-600" },
+  { name: "Ecosia", url: "https://www.ecosia.org", color: "from-green-400 to-green-600" },
+  { name: "DuckDuckGo", url: "https://duckduckgo.com", color: "from-orange-400 to-orange-600" },
+  { name: "Bing", url: "https://www.bing.com", color: "from-cyan-400 to-cyan-600" },
 ];
 
 const SearchEngineSelector: React.FC = () => {
   const [activeSearchEngine, setActiveSearchEngine] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Fetch the saved search engine from storage
   useEffect(() => {
     const fetchSearchEngine = async () => {
-      // Ensure we correctly type the result from storage
-      const savedSearchEngine = await storage.getItem(
-        "sync:defaultSearchEngine"
-      );
-
-      console.log(savedSearchEngine);
-
-      // Type assertion to make sure savedSearchEngine is a string (if it's not, default to "google")
-      setActiveSearchEngine(
-        savedSearchEngine ? (savedSearchEngine as string) : "google"
-      );
+      const savedSearchEngine = await storage.getItem("sync:defaultSearchEngine");
+      setActiveSearchEngine(savedSearchEngine ? (savedSearchEngine as string) : "google");
       setLoading(false);
     };
-
     fetchSearchEngine();
   }, []);
 
-  // Update the active search engine and save it to storage
   const handleSelectEngine = async (engine: string) => {
-    const engineLowerCase = engine.toLocaleLowerCase(); // Store the engine in lowercase
+    const engineLowerCase = engine.toLowerCase();
     setActiveSearchEngine(engineLowerCase);
     await storage.setItem("sync:defaultSearchEngine", engineLowerCase);
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-4 py-6">
-      <h3 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 text-center">
-        Select your default search engine
+    <div className="w-full">
+      <h3 className="text-2xl font-bold mb-6 text-gray-200">
+        Default Search Engine
       </h3>
 
       {loading ? (
-        <p className="text-gray-500 text-lg text-center">Loading...</p>
+        <div className="flex justify-center py-8">
+          <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 gap-4">
           {searchEngines.map((engine) => (
             <div
               key={engine.name}
-              className={`relative flex items-center p-3 cursor-pointer rounded-lg border-2 transition-all duration-300 hover:shadow-md ${
-                activeSearchEngine === engine.name.toLowerCase()
-                  ? `border-[#32CD32] bg-[#32CD32]/10`
-                  : "border-gray-300 hover:border-[#32CD32]/50"
-              }`}
+              className={`relative group cursor-pointer rounded-xl p-4 transition-all duration-300 transform hover:scale-[1.02] ${activeSearchEngine === engine.name.toLowerCase()
+                ? `bg-gradient-to-r ${engine.color} shadow-lg`
+                : "bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600"
+                }`}
               onClick={() => handleSelectEngine(engine.name)}
             >
               {activeSearchEngine === engine.name.toLowerCase() && (
-                <div className="absolute top-1 right-1 flex items-center justify-center w-5 h-5 bg-white rounded-full border-2 border-[#32CD32]">
-                  <CheckIcon className="w-3 h-3 text-[#32CD32]" />
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-white rounded-full shadow-md flex items-center justify-center">
+                  <CheckIcon className="w-4 h-4 text-emerald-500" />
                 </div>
               )}
 
-              <img
-                src={`https://www.google.com/s2/favicons?domain=${engine.url}&sz=32`}
-                alt={`${engine.name} icon`}
-                className="w-8 h-8 mr-3"
-              />
-              <div className="font-medium text-sm sm:text-base">
-                {engine.name}
+              <div className="flex items-center space-x-3">
+                <img
+                  src={`https://www.google.com/s2/favicons?domain=${engine.url}&sz=32`}
+                  alt={`${engine.name} icon`}
+                  className="w-8 h-8 transition-transform duration-300 group-hover:rotate-12"
+                />
+                <span className={`font-medium ${activeSearchEngine === engine.name.toLowerCase()
+                  ? "text-white"
+                  : "text-gray-700 dark:text-gray-300"
+                  }`}>
+                  {engine.name}
+                </span>
               </div>
             </div>
           ))}

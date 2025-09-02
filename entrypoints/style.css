@@ -199,6 +199,7 @@
     }
   }
 }
+
 @keyframes flowGradient1 {
   0% {
     transform: translate(0, 0);
@@ -258,4 +259,27 @@
 
 .max-h-64::-webkit-scrollbar-thumb:hover {
   @apply bg-muted-foreground/50;
+}
+
+/* Add to your global CSS or style.css */
+@keyframes glow {
+  from {
+    filter: drop-shadow(0 0 2px currentColor);
+  }
+
+  to {
+    filter: drop-shadow(0 0 4px currentColor);
+  }
+}
+
+.drop-shadow-glow {
+  animation: glow 1.5s ease-in-out infinite alternate;
+}
+
+/* Enhanced glass morphism for supported browsers */
+@supports (backdrop-filter: blur(32px)) {
+  .backdrop-blur-3xl {
+    backdrop-filter: blur(32px) saturate(180%);
+    -webkit-backdrop-filter: blur(32px) saturate(180%);
+  }
 }

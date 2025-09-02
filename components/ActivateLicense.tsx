@@ -14,6 +14,7 @@ import { storage } from "wxt/storage";
 import { CheckCircleIcon, ArrowPathIcon } from "@heroicons/react/24/solid";
 import { encryptData } from "@/lib/cryptoUtils";
 import { generatePhrase } from "@/lib/namegenerator";
+import { KeyIcon, UserIcon } from "lucide-react";
 
 const handshakePassword = import.meta.env.VITE_QUICKPEEK_HANDSHAKE_PASSWORD;
 
@@ -196,14 +197,15 @@ const ActivateLicense = () => {
   return (
     <div className="space-y-4">
       {/* License Status Card */}
-      <div className="rounded-lg border p-2">
-        <div className="flex flex-col space-y-4 sm:flex-row sm:justify-between sm:items-center sm:space-y-0">
+      <div className="rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 p-4 border border-gray-200 dark:border-gray-600">
+        <div className="flex flex-col space-y-3 sm:flex-row sm:justify-between sm:items-center sm:space-y-0">
           <div className="flex items-center space-x-2">
+            <KeyIcon className="w-5 h-5 text-emerald-500" />
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger>
                   <p
-                    className="font-medium text-xs sm:text-base cursor-pointer hover:opacity-75 transition-opacity"
+                    className="font-mono text-sm cursor-pointer hover:text-emerald-600 transition-colors"
                     onClick={() => handleCopy(licenseData?.license_key || "")}
                   >
                     {licenseData?.license_key
@@ -220,20 +222,18 @@ const ActivateLicense = () => {
 
           <div>
             {licenseData?.status === "active" ? (
-              <div className="inline-flex items-center space-x-2 border border-green-600 text-green-700 px-3 py-1 rounded-full">
+              <div className="inline-flex items-center space-x-2 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-3 py-1 rounded-full">
                 <CheckCircleIcon className="w-4 h-4" />
-                <span className="text-xs font-medium">
-                  {licenseData?.status.toUpperCase()}
-                </span>
+                <span className="text-xs font-medium">ACTIVE</span>
               </div>
-            ) : licenseData?.status === "disabled" ||
-              licenseData?.status === "inactive" ? (
-              <div className="text-red-600 text-sm font-medium">
-                {licenseData?.status.toUpperCase()}
+            ) : licenseData?.status === "disabled" || licenseData?.status === "inactive" ? (
+              <div className="inline-flex items-center space-x-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 px-3 py-1 rounded-full">
+                <span className="text-xs font-medium">{licenseData?.status.toUpperCase()}</span>
               </div>
             ) : (
-              <div className="text-gray-500 text-sm">
-                Checking license status...
+              <div className="inline-flex items-center space-x-2 bg-gray-100 dark:bg-gray-700 text-gray-500 px-3 py-1 rounded-full">
+                <ArrowPathIcon className="w-3 h-3 animate-spin" />
+                <span className="text-xs">Checking...</span>
               </div>
             )}
           </div>
@@ -241,42 +241,48 @@ const ActivateLicense = () => {
       </div>
 
       {/* Activation Form */}
-      <form className="rounded-lg border p-4" onSubmit={handleActivate}>
+      <form className="space-y-4" onSubmit={handleActivate}>
         <div className="space-y-4">
-          <div>
-            <Label htmlFor="activationKey" className="text-sm font-medium">
+          <div className="relative">
+            <Label htmlFor="activationKey" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
               License Key
             </Label>
-            <Input
-              type="text"
-              id="activationKey"
-              value={activationKey}
-              onChange={(e) => setActivationKey(e.target.value)}
-              placeholder="Enter your license key"
-              disabled={loading.activation}
-              className="mt-1 text-sm"
-            />
+            <div className="relative">
+              <KeyIcon className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <Input
+                type="text"
+                id="activationKey"
+                value={activationKey}
+                onChange={(e) => setActivationKey(e.target.value)}
+                placeholder="XXXX-XXXX-XXXX-XXXX"
+                disabled={loading.activation}
+                className="pl-10 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:border-emerald-500 focus:ring-emerald-500"
+              />
+            </div>
           </div>
 
-          <div>
-            <Label htmlFor="userName" className="text-sm font-medium">
+          <div className="relative">
+            <Label htmlFor="userName" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
               Your Name (Optional)
             </Label>
-            <Input
-              type="text"
-              id="userName"
-              value={userName}
-              onChange={(e) => setUserName(e.target.value)}
-              placeholder="Enter your name"
-              disabled={loading.activation}
-              className="mt-1 text-sm"
-            />
+            <div className="relative">
+              <UserIcon className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <Input
+                type="text"
+                id="userName"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                placeholder="John Doe"
+                disabled={loading.activation}
+                className="pl-10 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:border-emerald-500 focus:ring-emerald-500"
+              />
+            </div>
           </div>
 
           <Button
             type="submit"
             disabled={loading.activation}
-            className="w-full"
+            className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-300 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading.activation && (
               <ArrowPathIcon className="w-4 h-4 mr-2 animate-spin" />

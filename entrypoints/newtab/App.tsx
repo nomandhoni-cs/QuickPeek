@@ -1,3 +1,4 @@
+// App.tsx
 import { useEffect, useState } from "react";
 import ShortcutManager from "@/components/shortcut-manager-wxt";
 import ChromeTopSites from "@/components/ChromeTopSites";
@@ -6,14 +7,13 @@ import {
   wallpaperItem,
   ensureInitialWallpaper,
 } from "@/lib/wallpapers";
+import { motion } from "framer-motion";
 
 const App = () => {
   const [background, setBackground] = useState<string | null>(null);
   const [bgReady, setBgReady] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true);
 
   useEffect(() => {
-    // Ensure first-time users get a random wallpaper
     const setup = async () => {
       try {
         await ensureInitialWallpaper();
@@ -21,8 +21,6 @@ const App = () => {
         setBackground(saved);
       } catch (err) {
         console.error("Failed to set up wallpaper:", err);
-      } finally {
-        setInitialLoading(false);
       }
     };
 
@@ -36,7 +34,6 @@ const App = () => {
     return () => unwatch();
   }, []);
 
-  // Decode before showing to avoid pop-in
   useEffect(() => {
     if (!background) {
       setBgReady(true);
@@ -56,37 +53,32 @@ const App = () => {
   }, [background]);
 
   return (
-    <div className="h-screen flex items-center justify-center">
-      {/* Initial loading indicator */}
-      {initialLoading && (
-        <div className="fixed inset-0 flex items-center justify-center bg-background z-50">
-          <div className="flex flex-col items-center gap-3">
-            <div className="h-8 w-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin"></div>
-            <p className="text-sm text-muted-foreground">Setting up your new tab...</p>
-          </div>
-        </div>
-      )}
-
+    <div className="h-screen flex items-center justify-center relative">
       {/* Full-screen background layer */}
       <div
-        className="fixed inset-0 -z-10 transition-opacity duration-500"
+        className="fixed inset-0 -z-10 transition-opacity duration-700"
         style={{
           backgroundImage: background ? `url(${background})` : "none",
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
           opacity: bgReady ? 1 : 0,
-          willChange: "opacity, background-image",
+          willChange: "opacity",
           backgroundAttachment: "fixed",
         }}
       />
 
-      {/* Your existing content */}
-      <div>
+      {/* Content with smooth fade-in */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="w-full max-w-4xl px-4"
+      >
         <SearchInterface />
         <ChromeTopSites />
         <ShortcutManager />
-      </div>
+      </motion.div>
     </div>
   );
 };
