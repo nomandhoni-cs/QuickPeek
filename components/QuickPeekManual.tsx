@@ -38,7 +38,7 @@ export default function QuickPeekManual() {
                   <span className="text-green-400">Works on ANY website!</span>
                   <span className="text-gray-300 ml-2">Just press</span>
                   <kbd className="mx-2 px-3 py-1 bg-gray-800 rounded-lg text-sm font-mono text-green-400 border border-gray-700">
-                    {navigator.platform.includes("Mac") ? "⌘ + M" : "Ctrl + M"}
+                    {navigator.userAgent.includes("Mac") ? "⌘ + M" : "Ctrl + M"}
                   </kbd>
                   <span className="text-gray-300">anywhere, anytime</span>
                 </p>
@@ -99,7 +99,7 @@ export default function QuickPeekManual() {
                   <ShieldCheckIcon className="w-5 h-5 text-green-400" />
                   <h3 className="text-lg font-bold text-green-400">Get Pro License</h3>
                 </div>
-                <p className="text-xs text-gray-400 mb-4">Unlock all features and support development</p>
+                <p className="text-xs text-gray-300 mb-4">Unlock all features and support development</p>
                 <a
                   href="https://blinkeye.lemonsqueezy.com/buy/fdb56430-a71d-4f25-9bd5-08ca19d29298"
                   target="_blank"
@@ -108,7 +108,7 @@ export default function QuickPeekManual() {
                 >
                   Buy License →
                 </a>
-                <p className="text-xs text-gray-500 mt-3 text-center">One-time purchase • Lifetime updates</p>
+                <p className="text-xs text-gray-300 mt-3 text-center">One-time purchase • Lifetime updates</p>
               </div>
             </div>
           </div>
