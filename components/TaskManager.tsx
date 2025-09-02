@@ -502,7 +502,7 @@ const TaskManager: React.FC<TaskManagerProps> = ({ className, isFloating = false
   return (
     <div
       className={cn(
-        "w-80 h-full flex flex-col",
+        "w-full md:w-80 h-full flex flex-col",
         "bg-black/30 backdrop-blur-3xl",
         "border-r border-white/[0.08]",
         "shadow-2xl",
