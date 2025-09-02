@@ -1,12 +1,12 @@
 // components/LayoutWrapper.tsx
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { layoutConfigStorage, LayoutConfig } from "@/lib/layout-storage";
 import TaskManager from "./TaskManager";
 import { taskManagerHiddenStorage } from "@/components/storage";
 import { Button } from "@/components/ui/button";
-import { GripVertical, X, Minimize2, Maximize2 } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from "lucide-react";
 
 interface LayoutWrapperProps {
     children: React.ReactNode;
@@ -15,11 +15,8 @@ interface LayoutWrapperProps {
 const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ children }) => {
     const [layoutConfig, setLayoutConfig] = useState<LayoutConfig | null>(null);
     const [isTaskManagerHidden, setIsTaskManagerHidden] = useState(false);
-    const [isDragging, setIsDragging] = useState(false);
-    const [isResizing, setIsResizing] = useState(false);
-    const [sidebarWidth, setSidebarWidth] = useState(320);
-    const dragRef = useRef<HTMLDivElement>(null);
-    const [floatingPos, setFloatingPos] = useState({ x: 20, y: 20 });
+    const [isCollapsed, setIsCollapsed] = useState(false);
+    const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {
         const loadConfig = async () => {
@@ -29,16 +26,16 @@ const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ children }) => {
             ]);
             setLayoutConfig(config);
             setIsTaskManagerHidden(hidden);
-            setSidebarWidth(config.sidebarWidth || 320);
-            setFloatingPos(config.floatingPosition || { x: 20, y: 20 });
+            setIsCollapsed(config.isCollapsed || false);
+            // Silent loading without UI feedback
+            setTimeout(() => setIsLoaded(true), 100);
         };
 
         loadConfig();
 
         const unwatchLayout = layoutConfigStorage.watch((newConfig) => {
             setLayoutConfig(newConfig);
-            setSidebarWidth(newConfig.sidebarWidth || 320);
-            setFloatingPos(newConfig.floatingPosition || { x: 20, y: 20 });
+            setIsCollapsed(newConfig.isCollapsed || false);
         });
 
         const unwatchHidden = taskManagerHiddenStorage.watch((hidden) => {
@@ -51,173 +48,95 @@ const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ children }) => {
         };
     }, []);
 
-    const handleDragStart = (e: React.MouseEvent) => {
-        if (layoutConfig?.mode !== "floating") return;
-        setIsDragging(true);
-        const startX = e.clientX - floatingPos.x;
-        const startY = e.clientY - floatingPos.y;
-
-        const handleMouseMove = (e: MouseEvent) => {
-            const newX = Math.max(0, Math.min(window.innerWidth - 400, e.clientX - startX));
-            const newY = Math.max(0, Math.min(window.innerHeight - 600, e.clientY - startY));
-            setFloatingPos({ x: newX, y: newY });
-        };
-
-        const handleMouseUp = async () => {
-            setIsDragging(false);
-            document.removeEventListener("mousemove", handleMouseMove);
-            document.removeEventListener("mouseup", handleMouseUp);
-
-            // Save position
-            await layoutConfigStorage.setValue({
-                ...layoutConfig!,
-                floatingPosition: floatingPos,
-            });
-        };
-
-        document.addEventListener("mousemove", handleMouseMove);
-        document.addEventListener("mouseup", handleMouseUp);
-    };
-
-    const handleResize = (e: React.MouseEvent) => {
-        e.preventDefault();
-        setIsResizing(true);
-        const startX = e.clientX;
-        const startWidth = sidebarWidth;
-
-        const handleMouseMove = (e: MouseEvent) => {
-            const diff = e.clientX - startX;
-            const newWidth = layoutConfig?.mode === "sidebar-left"
-                ? startWidth + diff
-                : startWidth - diff;
-            const clampedWidth = Math.max(280, Math.min(600, newWidth));
-            setSidebarWidth(clampedWidth);
-        };
-
-        const handleMouseUp = async () => {
-            setIsResizing(false);
-            document.removeEventListener("mousemove", handleMouseMove);
-            document.removeEventListener("mouseup", handleMouseUp);
-
-            // Save width
-            await layoutConfigStorage.setValue({
-                ...layoutConfig!,
-                sidebarWidth: sidebarWidth,
-            });
-        };
-
-        document.addEventListener("mousemove", handleMouseMove);
-        document.addEventListener("mouseup", handleMouseUp);
-    };
-
-    const toggleCollapse = async () => {
+    const toggleSidebar = async () => {
+        const newCollapsed = !isCollapsed;
+        setIsCollapsed(newCollapsed);
         await layoutConfigStorage.setValue({
             ...layoutConfig!,
-            isCollapsed: !layoutConfig?.isCollapsed,
+            isCollapsed: newCollapsed,
         });
     };
 
-    if (isTaskManagerHidden || !layoutConfig) {
+    if (isTaskManagerHidden || !layoutConfig || !isLoaded) {
         return <>{children}</>;
     }
 
-    const TaskManagerSidebar = () => (
-        <aside
+    const isLeftSidebar = layoutConfig.mode === "sidebar-left";
+    const isRightSidebar = layoutConfig.mode === "sidebar-right";
+
+    const SidebarToggleButton = () => (
+        <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleSidebar}
             className={cn(
-                "relative bg-background/95 backdrop-blur-xl border-r border-border/50 shadow-xl transition-all duration-300",
-                layoutConfig.isCollapsed && "w-0 overflow-hidden",
-                !layoutConfig.isCollapsed && `w-[${sidebarWidth}px]`
+                "fixed top-1/2 -translate-y-1/2 z-50",
+                "h-8 w-8 rounded-full",
+                "bg-white/10 backdrop-blur-md border border-white/20",
+                "hover:bg-white/20 transition-all duration-200",
+                "shadow-lg hover:shadow-xl",
+                isLeftSidebar && (isCollapsed ? "left-2" : "left-[324px]"),
+                isRightSidebar && (isCollapsed ? "right-2" : "right-[324px]")
             )}
-            style={{ width: layoutConfig.isCollapsed ? 0 : sidebarWidth }}
         >
-            <div className="h-full flex flex-col">
-                {/* Collapse button */}
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className={cn(
-                        "absolute top-2 z-10 h-6 w-6",
-                        layoutConfig.mode === "sidebar-left"
-                            ? "-right-3 rounded-r-md"
-                            : "-left-3 rounded-l-md"
-                    )}
-                    onClick={toggleCollapse}
-                >
-                    {layoutConfig.isCollapsed ? <Maximize2 className="h-3 w-3" /> : <Minimize2 className="h-3 w-3" />}
-                </Button>
-
-                {/* Resize handle */}
-                <div
-                    className={cn(
-                        "absolute top-0 bottom-0 w-1 cursor-col-resize hover:bg-primary/20 transition-colors",
-                        layoutConfig.mode === "sidebar-left" ? "right-0" : "left-0",
-                        isResizing && "bg-primary/30"
-                    )}
-                    onMouseDown={handleResize}
-                />
-
-                <TaskManager className="h-full" />
-            </div>
-        </aside>
-    );
-
-    const TaskManagerFloating = () => (
-        <motion.div
-            ref={dragRef}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className={cn(
-                "fixed z-50 w-96 h-[600px] bg-background/95 backdrop-blur-xl",
-                "border border-border/50 rounded-lg shadow-2xl",
-                isDragging && "cursor-grabbing"
+            {isLeftSidebar ? (
+                isCollapsed ? <PanelLeftOpen className="h-4 w-4 text-white" /> : <PanelLeftClose className="h-4 w-4 text-white" />
+            ) : (
+                isCollapsed ? <PanelRightOpen className="h-4 w-4 text-white" /> : <PanelRightClose className="h-4 w-4 text-white" />
             )}
-            style={{
-                left: floatingPos.x,
-                top: floatingPos.y,
-            }}
-        >
-            {/* Drag handle */}
-            <div
-                className="absolute top-0 left-0 right-0 h-10 flex items-center justify-between px-4 border-b cursor-grab"
-                onMouseDown={handleDragStart}
-            >
-                <div className="flex items-center gap-2">
-                    <GripVertical className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">Tasks</span>
-                </div>
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    onClick={() => taskManagerHiddenStorage.setValue(true)}
-                >
-                    <X className="h-4 w-4" />
-                </Button>
-            </div>
-
-            <div className="h-full pt-10">
-                <TaskManager className="h-full" />
-            </div>
-        </motion.div>
+        </Button>
     );
 
     if (layoutConfig.mode === "floating") {
         return (
             <>
                 {children}
-                <AnimatePresence>
-                    <TaskManagerFloating />
-                </AnimatePresence>
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.2 }}
+                    className="fixed z-40"
+                    style={{
+                        left: layoutConfig.floatingPosition?.x || 20,
+                        top: layoutConfig.floatingPosition?.y || 20,
+                    }}
+                >
+                    <TaskManager isFloating={true} />
+                </motion.div>
             </>
         );
     }
 
     return (
-        <div className="layout h-screen w-full flex">
-            {layoutConfig.mode === "sidebar-left" && <TaskManagerSidebar />}
-            <main className="flex-1 overflow-auto">{children}</main>
-            {layoutConfig.mode === "sidebar-right" && <TaskManagerSidebar />}
+        <div className="relative h-screen w-full overflow-hidden">
+            <AnimatePresence mode="wait">
+                {!isCollapsed && (
+                    <motion.aside
+                        initial={{ x: isLeftSidebar ? -320 : 320, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        exit={{ x: isLeftSidebar ? -320 : 320, opacity: 0 }}
+                        transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                        className={cn(
+                            "fixed top-0 h-full z-40",
+                            isLeftSidebar ? "left-0" : "right-0"
+                        )}
+                    >
+                        <TaskManager />
+                    </motion.aside>
+                )}
+            </AnimatePresence>
+
+            <SidebarToggleButton />
+
+            <main
+                className={cn(
+                    "h-full transition-all duration-300 ease-in-out",
+                    !isCollapsed && isLeftSidebar && "pl-[320px]",
+                    !isCollapsed && isRightSidebar && "pr-[320px]"
+                )}
+            >
+                {children}
+            </main>
         </div>
     );
 };

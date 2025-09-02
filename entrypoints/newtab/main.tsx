@@ -10,7 +10,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <LayoutWrapper>
       <App />
-      <div className="fixed bottom-4 right-4 z-20">
+      <div className="fixed bottom-4 right-4 z-30">
         <NewTabSetting />
       </div>
     </LayoutWrapper>
