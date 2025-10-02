@@ -17,7 +17,6 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
 
-
 import { MENU_ITEMS, CATEGORIES } from "@/lib/menuItems"
 import { calculateExpression, executeSearch, fetchSearchSuggestions, isValidUrl } from "@/lib/searchUtils"
 
@@ -199,7 +198,7 @@ export default function SearchInterface() {
         // Default search
         items.push({
             id: "qa-search",
-            label: `Search “${search.trim()}”`,
+            label: `Search "${search.trim()}"`,
             icon: <Search className="w-4 h-4" />,
             onSelect: () => handleExecuteSearch(search),
             value: `search ${search.trim()}`,
@@ -219,7 +218,7 @@ export default function SearchInterface() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 0.12 }}
+                        transition={{ duration: 0.1, ease: "easeOut" }}
                         className="fixed inset-0 bg-black/50 backdrop-blur-sm"
                         onClick={closeSearch}
                     />
@@ -250,17 +249,16 @@ export default function SearchInterface() {
                                     if (!isExpanded) setIsExpanded(true)
                                 }}
                                 onFocus={() => setIsExpanded(true)}
-                                placeholder="Search or calculate..."
-                                // Important: do NOT intercept Enter here; cmdk will execute the selected item
+                                placeholder="Search anything or calculate..."
                                 className="w-full pl-12 pr-12 py-4 text-lg bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground"
                             />
-                            <AnimatePresence initial={false}>
+                            <AnimatePresence mode="wait">
                                 {isExpanded && (
                                     <motion.div
-                                        initial={{ opacity: 0, scale: 0.92 }}
+                                        initial={{ opacity: 0, scale: 0.9 }}
                                         animate={{ opacity: 1, scale: 1 }}
-                                        exit={{ opacity: 0, scale: 0.92 }}
-                                        transition={{ duration: 0.1 }}
+                                        exit={{ opacity: 0, scale: 0.9 }}
+                                        transition={{ duration: 0.08, ease: "easeInOut" }}
                                         className="absolute right-2 top-2 -translate-y-1/2"
                                     >
                                         <Button
@@ -277,8 +275,8 @@ export default function SearchInterface() {
                             </AnimatePresence>
                         </div>
 
-                        {/* Expandable content */}
-                        <AnimatePresence>
+                        {/* Expandable content with FIXED height */}
+                        <AnimatePresence mode="wait">
                             {isExpanded && (
                                 <motion.div
                                     key="content"
@@ -286,14 +284,23 @@ export default function SearchInterface() {
                                     animate={{ height: "auto", opacity: 1 }}
                                     exit={{ height: 0, opacity: 0 }}
                                     transition={{
-                                        height: { type: "spring", damping: 26, stiffness: 360 },
-                                        opacity: { duration: 0.12 },
+                                        height: {
+                                            type: "spring",
+                                            damping: 30,
+                                            stiffness: 400,
+                                            mass: 0.8
+                                        },
+                                        opacity: { duration: 0.1, ease: "easeInOut" },
                                     }}
                                     className="overflow-hidden"
                                 >
                                     {/* Calculator banner */}
                                     {calculationResult && (
-                                        <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.12 }}>
+                                        <motion.div
+                                            initial={{ opacity: 0, y: -4 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ duration: 0.1, ease: "easeOut" }}
+                                        >
                                             <div className="px-4 py-3 border-b bg-gradient-to-r from-primary/10 to-primary/5">
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center gap-3">
@@ -309,7 +316,11 @@ export default function SearchInterface() {
 
                                     {/* URL banner */}
                                     {isUrl && (
-                                        <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.12 }}>
+                                        <motion.div
+                                            initial={{ opacity: 0, y: -4 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ duration: 0.1, ease: "easeOut" }}
+                                        >
                                             <div className="px-4 py-3 border-b bg-gradient-to-r from-emerald-500/10 to-green-500/5">
                                                 <div className="flex items-center gap-3">
                                                     <span className="text-green-600 dark:text-green-400">🌐</span>
@@ -321,18 +332,22 @@ export default function SearchInterface() {
                                         </motion.div>
                                     )}
 
-                                    {/* Tabs (wrapped in ScrollArea for horizontal overflow) */}
+                                    {/* Tabs with horizontal ScrollArea */}
                                     <div className="border-b bg-muted/30">
                                         <ScrollArea className="w-full">
                                             <div className="px-4 py-3 flex gap-2">
                                                 {tabs.map((cat, i) => (
                                                     <motion.button
                                                         key={cat}
-                                                        initial={{ opacity: 0, x: -6 }}
+                                                        initial={{ opacity: 0, x: -4 }}
                                                         animate={{ opacity: 1, x: 0 }}
-                                                        transition={{ delay: i * 0.02, duration: 0.1 }}
+                                                        transition={{
+                                                            delay: i * 0.015,
+                                                            duration: 0.08,
+                                                            ease: "easeOut"
+                                                        }}
                                                         onClick={() => setSelectedCategory(cat)}
-                                                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${selectedCategory === cat
+                                                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-100 whitespace-nowrap ${selectedCategory === cat
                                                             ? "bg-primary text-primary-foreground shadow"
                                                             : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
                                                             }`}
@@ -345,8 +360,8 @@ export default function SearchInterface() {
                                         </ScrollArea>
                                     </div>
 
-                                    {/* Content list with shadcn ScrollArea */}
-                                    <ScrollArea className="max-h-[50vh]">
+                                    {/* FIXED HEIGHT Content list with ScrollArea */}
+                                    <ScrollArea className="h-[250px]">
                                         <div className="p-2">
                                             <Command.List>
                                                 <Command.Empty>
@@ -362,9 +377,13 @@ export default function SearchInterface() {
                                                         {quickActions.map((qa, index) => (
                                                             <motion.div
                                                                 key={qa.id}
-                                                                initial={{ opacity: 0, x: -12 }}
+                                                                initial={{ opacity: 0, x: -8 }}
                                                                 animate={{ opacity: 1, x: 0 }}
-                                                                transition={{ delay: index * 0.02, duration: 0.1 }}
+                                                                transition={{
+                                                                    delay: index * 0.015,
+                                                                    duration: 0.08,
+                                                                    ease: "easeOut"
+                                                                }}
                                                             >
                                                                 <Command.Item
                                                                     value={qa.value}
@@ -373,9 +392,9 @@ export default function SearchInterface() {
                                                                         qa.onSelect()
                                                                         closeSearch()
                                                                     }}
-                                                                    className="flex items-center gap-3 px-4 py-3 rounded-lg data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground cursor-pointer"
+                                                                    className="flex items-center gap-3 px-4 py-3 rounded-lg aria-selected:bg-accent aria-selected:text-accent-foreground cursor-pointer transition-colors duration-100"
                                                                 >
-                                                                    <span className="text-muted-foreground">{qa.icon}</span>
+                                                                    <span className="text-muted-foreground flex-shrink-0">{qa.icon}</span>
                                                                     <span className="flex-1">{qa.label}</span>
                                                                 </Command.Item>
                                                             </motion.div>
@@ -405,14 +424,18 @@ export default function SearchInterface() {
                                                         {suggestions.map((s, index) => (
                                                             <motion.div
                                                                 key={`sugg-${index}`}
-                                                                initial={{ opacity: 0, x: -12 }}
+                                                                initial={{ opacity: 0, x: -8 }}
                                                                 animate={{ opacity: 1, x: 0 }}
-                                                                transition={{ delay: index * 0.02, duration: 0.1 }}
+                                                                transition={{
+                                                                    delay: index * 0.015,
+                                                                    duration: 0.08,
+                                                                    ease: "easeOut"
+                                                                }}
                                                             >
                                                                 <Command.Item
                                                                     value={s}
                                                                     onSelect={() => handleExecuteSearch(s)}
-                                                                    className="flex items-center gap-3 px-4 py-3 rounded-lg data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground cursor-pointer"
+                                                                    className="flex items-center gap-3 px-4 py-3 rounded-lg aria-selected:bg-accent aria-selected:text-accent-foreground cursor-pointer transition-colors duration-100"
                                                                 >
                                                                     <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                                                                     <span className="flex-1">{s}</span>
@@ -457,22 +480,21 @@ export default function SearchInterface() {
                                                     )}
                                             </Command.List>
                                         </div>
-
                                         <ScrollBar orientation="vertical" />
                                     </ScrollArea>
 
-                                    {/* Footer / shortcuts */}
+                                    {/* Footer */}
                                     <motion.div
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
-                                        transition={{ duration: 0.12 }}
+                                        transition={{ duration: 0.1, ease: "easeOut" }}
                                         className="border-t px-4 py-2.5 bg-muted/30 flex justify-between items-center text-xs text-muted-foreground"
                                     >
                                         <div className="flex items-center gap-1.5">
                                             <SearchIcon className="h-4 w-4 text-emerald-500" />
                                             <span className="font-medium">QuickPeek</span>
                                         </div>
-                                        <div className="flex items-center gap-4">
+                                        <div className="hidden lg:flex items-center gap-4">
                                             <div className="flex items-center gap-1">
                                                 <ArrowUp className="w-3 h-3" />
                                                 <ArrowDown className="w-3 h-3" />
@@ -480,7 +502,7 @@ export default function SearchInterface() {
                                             </div>
                                             <div className="flex items-center gap-1">
                                                 <span>←→</span>
-                                                <span>Switch tabs (when list active)</span>
+                                                <span>Switch tabs</span>
                                             </div>
                                             <div className="flex items-center gap-1">
                                                 <CornerDownLeft className="w-3 h-3" />
@@ -502,7 +524,7 @@ export default function SearchInterface() {
     )
 }
 
-// Item
+// Item Component
 function CommandMenuItem({
     item,
     index,
@@ -513,12 +535,20 @@ function CommandMenuItem({
     onSelect: (callback: () => void) => void
 }) {
     return (
-        <motion.div initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.02, duration: 0.1 }}>
+        <motion.div
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{
+                delay: index * 0.015,
+                duration: 0.08,
+                ease: "easeOut"
+            }}
+        >
             <Command.Item
                 value={`${item.label} ${item.keywords?.join(" ") || ""}`}
                 keywords={item.keywords}
                 onSelect={() => onSelect(item.action)}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground cursor-pointer"
+                className="flex items-center gap-3 px-4 py-3 rounded-lg aria-selected:bg-accent aria-selected:text-accent-foreground cursor-pointer transition-colors duration-100"
             >
                 <div className="text-muted-foreground flex-shrink-0">{item.icon}</div>
                 <span className="flex-1">{item.label}</span>

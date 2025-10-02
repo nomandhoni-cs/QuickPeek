@@ -17,7 +17,7 @@ export const MENU_ITEMS: MenuItem[] = [
         id: "downloads",
         label: "Open Downloads",
         icon: <Download className="w-4 h-4" />,
-        action: () => window.open('chrome://downloads', '_self'),
+        action: () => window.open('chrome://downloads', '_blank'),
         category: "Utilities",
     },
 
