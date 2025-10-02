@@ -8,7 +8,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { handleSearch } from "@/lib/searchUrl";
+import { handleSearch } from "@/lib/searchUtils";
 
 interface TabConfig {
   id: string;
@@ -76,16 +76,16 @@ export default function NewTabCommandBox() {
         setResults((prev) =>
           prev
             ? {
-                ...prev,
-                [activeTab]: [],
-              }
+              ...prev,
+              [activeTab]: [],
+            }
             : {
-                recent: [],
-                tabs: [],
-                history: [],
-                bookmarks: [],
-                downloads: [],
-              }
+              recent: [],
+              tabs: [],
+              history: [],
+              bookmarks: [],
+              downloads: [],
+            }
         );
         return;
       }
@@ -95,17 +95,17 @@ export default function NewTabCommandBox() {
         setResults((prev) =>
           prev
             ? {
-                ...prev,
-                [activeTab]: sectionCache[activeTab].data,
-              }
+              ...prev,
+              [activeTab]: sectionCache[activeTab].data,
+            }
             : {
-                recent: [],
-                tabs: [],
-                history: [],
-                bookmarks: [],
-                downloads: [],
-                [activeTab]: sectionCache[activeTab].data,
-              }
+              recent: [],
+              tabs: [],
+              history: [],
+              bookmarks: [],
+              downloads: [],
+              [activeTab]: sectionCache[activeTab].data,
+            }
         );
         return;
       }
@@ -244,26 +244,26 @@ export default function NewTabCommandBox() {
 
   const groupedItems = results
     ? Object.entries(results).reduce((acc, [sectionName, sectionItems]) => {
-        if (sectionName === activeTab && sectionItems.length > 0) {
-          acc[sectionName] = sectionItems.map((item: any) => ({
-            id: item.id.toString(),
-            label: item.title || item.filename || "Untitled",
-            icon: item.favIconUrl ? (
-              <img src={item.favIconUrl} alt="favicon" className="w-4 h-4" />
-            ) : (
-              <span>📄</span>
-            ),
-            metadata:
-              item.lastVisitTime || item.startTime
-                ? new Date(
-                    item.lastVisitTime || item.startTime!
-                  ).toLocaleString()
-                : undefined,
-            tabId: sectionName,
-          }));
-        }
-        return acc;
-      }, {} as Record<string, CommandItemData[]>)
+      if (sectionName === activeTab && sectionItems.length > 0) {
+        acc[sectionName] = sectionItems.map((item: any) => ({
+          id: item.id.toString(),
+          label: item.title || item.filename || "Untitled",
+          icon: item.favIconUrl ? (
+            <img src={item.favIconUrl} alt="favicon" className="w-4 h-4" />
+          ) : (
+            <span>📄</span>
+          ),
+          metadata:
+            item.lastVisitTime || item.startTime
+              ? new Date(
+                item.lastVisitTime || item.startTime!
+              ).toLocaleString()
+              : undefined,
+          tabId: sectionName,
+        }));
+      }
+      return acc;
+    }, {} as Record<string, CommandItemData[]>)
     : {};
 
   if (!mounted) return null;

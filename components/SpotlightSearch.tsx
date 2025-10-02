@@ -11,7 +11,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "./ui/scroll-area";
 import TrialRemaining from "./TrialRemaining";
 import RowSkeleton from "./RowSkeleton";
-import { handleSearch } from "@/lib/searchUrl";
+import { handleSearch } from "@/lib/searchUtils";
 import { FireIcon } from "@heroicons/react/24/solid";
 import { usePremiumFeatures } from "@/hooks/PremiumFeaturesContext";
 import GetPremiumFeature from "./GetPremiumFeature";
@@ -111,16 +111,16 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
         setResults((prev) =>
           prev
             ? {
-                ...prev,
-                [activeSection]: [],
-              }
+              ...prev,
+              [activeSection]: [],
+            }
             : {
-                recent: [],
-                tabs: [],
-                history: [],
-                bookmarks: [],
-                downloads: [],
-              }
+              recent: [],
+              tabs: [],
+              history: [],
+              bookmarks: [],
+              downloads: [],
+            }
         );
         return;
       }
@@ -130,17 +130,17 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
         setResults((prev) =>
           prev
             ? {
-                ...prev,
-                [activeSection]: sectionCache[activeSection].data,
-              }
+              ...prev,
+              [activeSection]: sectionCache[activeSection].data,
+            }
             : {
-                recent: [],
-                tabs: [],
-                history: [],
-                bookmarks: [],
-                downloads: [],
-                [activeSection]: sectionCache[activeSection].data,
-              }
+              recent: [],
+              tabs: [],
+              history: [],
+              bookmarks: [],
+              downloads: [],
+              [activeSection]: sectionCache[activeSection].data,
+            }
         );
         return;
       }
@@ -330,11 +330,10 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
           {sections.map((section) => (
             <button
               key={section}
-              className={`flex-1 p-2 capitalize flex items-center justify-center gap-1 ${
-                activeSection === section
+              className={`flex-1 p-2 capitalize flex items-center justify-center gap-1 ${activeSection === section
                   ? " text-gray-100 font-semibold"
                   : "hover:bg-green-300"
-              }`}
+                }`}
               onClick={() => {
                 setActiveSection(section);
               }}
@@ -417,11 +416,10 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
         <div
           key={item.id}
           ref={index === selectedItemIndex ? selectedItemRef : null}
-          className={`flex items-center p-2 rounded-lg border cursor-pointer ${
-            index === selectedItemIndex && hasArrowKeyPressed
+          className={`flex items-center p-2 rounded-lg border cursor-pointer ${index === selectedItemIndex && hasArrowKeyPressed
               ? "bg-gray-800 border-green-300 text-gray-100"
               : "hover:bg-green-300"
-          }`}
+            }`}
           onClick={() => {
             setHasArrowKeyPressed(true);
             setSelectedItemIndex(index);
@@ -494,7 +492,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
                   results && (
                     <div className="p-2 space-y-2">
                       {activeSection === "recent" ||
-                      canAccessPremiumFeatures ? (
+                        canAccessPremiumFeatures ? (
                         renderResultItems()
                       ) : (
                         <GetPremiumFeature />

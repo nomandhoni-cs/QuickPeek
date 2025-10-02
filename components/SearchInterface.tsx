@@ -1,967 +1,528 @@
 "use client"
 
-import type React from "react"
-
-import { useState, useRef, useEffect, useCallback } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { Command } from "cmdk"
+import { motion, AnimatePresence } from "framer-motion"
 import {
     Search,
     Calculator,
     ArrowUp,
     ArrowDown,
     CornerDownLeft,
-    Grid3X3,
     X,
     SearchIcon,
-    Download,
+    Link as LinkIcon,
 } from "lucide-react"
-import { SiGooglekeep, SiGooglecalendar, SiGooglemeet, SiGmail } from '@icons-pack/react-simple-icons';
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { handleSearch } from "@/lib/searchUrl";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
+import { Skeleton } from "@/components/ui/skeleton"
 
-interface MenuItem {
-    id: string
-    label: string
-    icon: React.ReactNode
-    action: () => void
-    category?: string
-    shortcutText?: string
-}
 
-interface Tab {
-    id: string
-    label: string
-    items: MenuItem[]
-}
+import { MENU_ITEMS, CATEGORIES } from "@/lib/menuItems"
+import { calculateExpression, executeSearch, fetchSearchSuggestions, isValidUrl } from "@/lib/searchUtils"
 
-interface SearchSuggestion {
-    id: string
-    query: string
-    type: "suggestion"
-}
-
-interface AllTabItem {
-    type: "suggestion" | "category" | "item"
-    id: string
-    label: string
-    icon?: React.ReactNode
-    action?: () => void
-    category?: string
-}
+// Update this import to your actual path
+// import TrialRemaining from "@/components/trial-remaining"
+declare const TrialRemaining: React.FC
 
 export default function SearchInterface() {
     const [isExpanded, setIsExpanded] = useState(false)
-    const [searchValue, setSearchValue] = useState("")
-    const [selectedTabIndex, setSelectedTabIndex] = useState(0)
-    const [selectedItemIndex, setSelectedItemIndex] = useState(-1)
-    const [calculationResult, setCalculationResult] = useState<string | null>(null)
-    const [isNavigatingTabs, setIsNavigatingTabs] = useState(false)
-    const [isFocusedOnSearch, setIsFocusedOnSearch] = useState(false)
-    const [searchSuggestions, setSearchSuggestions] = useState<SearchSuggestion[]>([])
+    const [search, setSearch] = useState("")
+    const [selectedCategory, setSelectedCategory] = useState<string>("All")
+    const [suggestions, setSuggestions] = useState<string[]>([])
     const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false)
 
-    const searchInputRef = useRef<HTMLInputElement>(null)
-    const dialogSearchInputRef = useRef<HTMLInputElement>(null)
     const containerRef = useRef<HTMLDivElement>(null)
-    const dialogRef = useRef<HTMLDivElement>(null)
-    const menuItemsRef = useRef<(HTMLDivElement | null)[]>([])
-    const tabsRef = useRef<(HTMLDivElement | null)[]>([])
-    const menuContainerRef = useRef<HTMLDivElement>(null)
+    const inputRef = useRef<HTMLInputElement>(null)
 
-    const baseTabs: Tab[] = [
-        {
-            id: "utilities",
-            label: "Utilities",
-            items: [
-                {
-                    id: "home",
-                    label: "Open Downloads",
-                    icon: <Download className="w-4 h-4" />,
-                    action: () => { browser.tabs.create({ url: 'chrome://downloads' }) },
-                    category: "Utilities",
-                    shortcutText: "",
-                },
-            ],
-        },
-        {
-            id: "appShortcuts", // Changed from "shortcuts" to be more descriptive
-            label: "App Actions & Shortcuts", // Changed from "Shortcuts"
-            items: [
-                // --- Google Suite ---
-                {
-                    id: "google-keep-new",
-                    label: "Create New Google Keep Note",
-                    icon: <SiGooglekeep color="#FFBB00" className="w-4 h-4" />,
-                    action: () => { window.open('https://note.new', '_blank'); },
-                    category: "Google Suite",
-                    shortcutText: "",
-                },
-                {
-                    id: "google-calendar-new",
-                    label: "Create New Google Calendar Event",
-                    icon: <SiGooglecalendar color="#4285F4" className="w-4 h-4" />,
-                    action: () => { window.open('https://cal.new', '_blank'); },
-                    category: "Google Suite",
-                    shortcutText: "",
-                },
-                {
-                    id: "google-meet-new",
-                    label: "Start a New Google Meet",
-                    icon: <SiGooglemeet color="#00897B" className="w-4 h-4" />,
-                    action: () => { window.open('https://meet.new', '_blank'); },
-                    category: "Google Suite",
-                    shortcutText: "",
-                },
-                {
-                    id: "gmail-compose",
-                    label: "Compose New Gmail",
-                    icon: <SiGmail color="#EA4335" className="w-4 h-4" />,
-                    action: () => { window.open('https://mail.google.com/mail/?view=cm&fs=1', '_blank'); },
-                    category: "Google Suite",
-                    shortcutText: "",
-                },
-                // {
-                //     id: "google-docs-new",
-                //     label: "Create New Google Doc",
-                //     icon: "GoogleDocsIcon",
-                //     action: () => { window.open('https://doc.new', '_blank'); },
-                //     category: "Google Suite",
-                // },
-                // {
-                //     id: "google-sheets-new",
-                //     label: "Create New Google Sheet",
-                //     icon: "GoogleSheetsIcon",
-                //     action: () => { window.open('https://sheet.new', '_blank'); },
-                //     category: "Google Suite",
-                // },
-                // {
-                //     id: "google-slides-new",
-                //     label: "Create New Google Slides",
-                //     icon: "GoogleSlidesIcon",
-                //     action: () => { window.open('https://slide.new', '_blank'); },
-                //     category: "Google Suite",
-                // },
-                // {
-                //     id: "google-forms-new",
-                //     label: "Create New Google Form",
-                //     icon: "GoogleFormsIcon",
-                //     action: () => { window.open('https://form.new', '_blank'); },
-                //     category: "Google Suite",
-                // },
+    const tabs = useMemo(() => ["All", ...CATEGORIES], [])
+    const calculationResult = useMemo(() => (search.trim() ? calculateExpression(search) : null), [search])
+    const isUrl = useMemo(() => isValidUrl(search), [search])
 
-                // // --- Microsoft Office 365 / Web ---
-                // {
-                //     id: "outlook-compose",
-                //     label: "Compose New Outlook Email (Web)",
-                //     icon: "OutlookIcon",
-                //     // Choose one or provide logic to pick based on user account type
-                //     action: () => { window.open('https://outlook.office.com/mail/deeplink/compose', '_blank'); /* or outlook.live.com for personal */ },
-                //     category: "Microsoft Office",
-                // },
-                // {
-                //     id: "ms-todo-open",
-                //     label: "Open Microsoft To Do (Web)",
-                //     icon: "MicrosoftToDoIcon",
-                //     action: () => { window.open('https://to-do.office.com/tasks/today', '_blank'); },
-                //     category: "Microsoft Office",
-                // },
-                // {
-                //     id: "ms-word-new",
-                //     label: "Create New Word Document (Web)",
-                //     icon: "WordIcon",
-                //     action: () => { window.open('https://www.office.com/launch/word?auth=1&from=Shellprod&New=1', '_blank'); }, // More reliable link
-                //     category: "Microsoft Office",
-                // },
-                // {
-                //     id: "ms-excel-new",
-                //     label: "Create New Excel Spreadsheet (Web)",
-                //     icon: "ExcelIcon",
-                //     action: () => { window.open('https://www.office.com/launch/excel?auth=1&from=Shellprod&New=1', '_blank'); },
-                //     category: "Microsoft Office",
-                // },
-                // {
-                //     id: "ms-powerpoint-new",
-                //     label: "Create New PowerPoint Presentation (Web)",
-                //     icon: "PowerPointIcon",
-                //     action: () => { window.open('https://www.office.com/launch/powerpoint?auth=1&from=Shellprod&New=1', '_blank'); },
-                //     category: "Microsoft Office",
-                // },
-
-                // // --- Project Management & Collaboration ---
-                // {
-                //     id: "jira-create-issue",
-                //     label: "Create Issue in Jira",
-                //     icon: "JiraIcon",
-                //     action: () => {
-                //         const jiraDomain = prompt("Enter your Jira domain (e.g., yourcompany.atlassian.net):");
-                //         if (jiraDomain) {
-                //             window.open(`https://${jiraDomain}/secure/CreateIssue.jspa`, '_blank');
-                //         }
-                //     },
-                //     category: "Project Management",
-                // },
-                // {
-                //     id: "trello-new-board",
-                //     label: "Create New Trello Board",
-                //     icon: "TrelloIcon",
-                //     action: () => { window.open('https://trello.com/boards/new', '_blank'); },
-                //     category: "Project Management",
-                // },
-                // {
-                //     id: "asana-new-task",
-                //     label: "Create New Asana Task",
-                //     icon: "AsanaIcon",
-                //     action: () => { window.open('https://app.asana.com/0/add-task', '_blank'); },
-                //     category: "Project Management",
-                // },
-                // {
-                //     id: "notion-new-page",
-                //     label: "Create New Notion Page",
-                //     icon: "NotionIcon",
-                //     action: () => { window.open('https://notion.new', '_blank'); },
-                //     category: "Collaboration",
-                // },
-                // {
-                //     id: "slack-open",
-                //     label: "Open Slack (Web)",
-                //     icon: "SlackIcon",
-                //     action: () => { window.open('https://app.slack.com/', '_blank'); },
-                //     category: "Collaboration",
-                // },
-
-                // // --- Other Productivity & Utilities ---
-                // {
-                //     id: "todoist-add-task",
-                //     label: "Add Task to Todoist",
-                //     icon: "TodoistIcon",
-                //     action: () => { window.open('https://todoist.com/add', '_blank'); },
-                //     category: "Productivity",
-                // },
-                // {
-                //     id: "icloud-reminders",
-                //     label: "Open iCloud Reminders",
-                //     icon: "AppleRemindersIcon",
-                //     action: () => { window.open('https://www.icloud.com/reminders/', '_blank'); },
-                //     category: "Productivity",
-                // }
-            ]
-        },
-        // {
-        //     id: "files",
-        //     label: "Files",
-        //     items: [
-        //         {
-        //             id: "search-files",
-        //             label: "Search Files",
-        //             icon: <FileText className="w-4 h-4" />,
-        //             action: () => console.log("Searching files..."),
-        //             category: "Files",
-        //         },
-        //         {
-        //             id: "recent-files",
-        //             label: "Recent Files",
-        //             icon: <Clock className="w-4 h-4" />,
-        //             action: () => console.log("Opening recent files..."),
-        //             category: "Files",
-        //         },
-        //         {
-        //             id: "bookmarks",
-        //             label: "Bookmarks",
-        //             icon: <Bookmark className="w-4 h-4" />,
-        //             action: () => console.log("Opening bookmarks..."),
-        //             category: "Files",
-        //         },
-        //     ],
-        // },
-        // {
-        //     id: "settings",
-        //     label: "Settings",
-        //     items: [
-        //         {
-        //             id: "preferences",
-        //             label: "Preferences",
-        //             icon: <Settings className="w-4 h-4" />,
-        //             action: () => console.log("Opening preferences..."),
-        //             category: "Settings",
-        //         },
-        //         {
-        //             id: "profile",
-        //             label: "View Profile",
-        //             icon: <User className="w-4 h-4" />,
-        //             action: () => console.log("Opening profile..."),
-        //             category: "Settings",
-        //         },
-        //     ],
-        // },
-    ]
-
-    // Create tabs with "All" tab first
-    const tabs: Tab[] = [
-        {
-            id: "all",
-            label: "All",
-            items: [], // Will be populated dynamically
-        },
-        ...baseTabs,
-    ]
-
-    // Calculate arithmetic expressions safely without eval
-    const calculateExpression = (expression: string): string | null => {
-        try {
-            const cleanExpression = expression.replace(/\s/g, "")
-
-            // Only allow basic arithmetic operations and numbers
-            if (!/^[\d+\-*/().]+$/.test(cleanExpression)) {
-                return null
-            }
-
-            // Check for invalid patterns
-            if (
-                cleanExpression.includes("//") ||
-                cleanExpression.includes("**") ||
-                cleanExpression.includes("++") ||
-                cleanExpression.includes("--")
-            ) {
-                return null
-            }
-
-            // Validate parentheses
-            let parenCount = 0
-            for (const char of cleanExpression) {
-                if (char === "(") parenCount++
-                if (char === ")") parenCount--
-                if (parenCount < 0) return null
-            }
-            if (parenCount !== 0) return null
-
-            // Parse and evaluate the expression safely
-            const result = safeEvaluate(cleanExpression)
-
-            if (typeof result === "number" && !isNaN(result) && isFinite(result)) {
-                // Format the result to handle floating point precision
-                return Number.isInteger(result) ? result.toString() : Number.parseFloat(result.toFixed(10)).toString()
-            }
-            return null
-        } catch {
-            return null
-        }
-    }
-
-    // Safe expression evaluator without eval
-    const safeEvaluate = (expr: string): number => {
-        // Remove spaces
-        expr = expr.replace(/\s/g, "")
-
-        // Handle parentheses first
-        while (expr.includes("(")) {
-            const start = expr.lastIndexOf("(")
-            const end = expr.indexOf(")", start)
-            if (end === -1) throw new Error("Mismatched parentheses")
-
-            const subExpr = expr.substring(start + 1, end)
-            const subResult = safeEvaluate(subExpr)
-            expr = expr.substring(0, start) + subResult + expr.substring(end + 1)
-        }
-
-        // Handle multiplication and division (left to right)
-        while (expr.match(/[\d.]+[*/][\d.]+/)) {
-            expr = expr.replace(/(\d+\.?\d*)\s*([*/])\s*(\d+\.?\d*)/, (match, a, op, b) => {
-                const numA = Number.parseFloat(a)
-                const numB = Number.parseFloat(b)
-                if (op === "*") return (numA * numB).toString()
-                if (op === "/") {
-                    if (numB === 0) throw new Error("Division by zero")
-                    return (numA / numB).toString()
-                }
-                return match
-            })
-        }
-
-        // Handle addition and subtraction (left to right)
-        while (expr.match(/[\d.]+[+-][\d.]+/)) {
-            expr = expr.replace(/(\d+\.?\d*)\s*([+-])\s*(\d+\.?\d*)/, (match, a, op, b) => {
-                const numA = Number.parseFloat(a)
-                const numB = Number.parseFloat(b)
-                if (op === "+") return (numA + numB).toString()
-                if (op === "-") return (numA - numB).toString()
-                return match
-            })
-        }
-
-        const result = Number.parseFloat(expr)
-        if (isNaN(result)) throw new Error("Invalid expression")
-        return result
-    }
-
-    // URL validation function
-    const isValidUrl = (string: string): boolean => {
-        const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/
-        return urlRegex.test(string.trim())
-    }
-
-    // Fetch search suggestions using DuckDuckGo
-    const fetchSearchSuggestions = useCallback(async (query: string) => {
-        if (!query.trim() || isValidUrl(query)) {
-            setSearchSuggestions([])
-            return
-        }
-
-        setIsLoadingSuggestions(true)
-        try {
-            // Using DuckDuckGo's autocomplete API
-            const response = await fetch(`https://duckduckgo.com/ac/?q=${encodeURIComponent(query)}&type=list`, {
-                method: "GET",
-                headers: {
-                    Accept: "application/json",
-                },
-            })
-
-            if (!response.ok) {
-                throw new Error("Failed to fetch suggestions")
-            }
-
-            const data = await response.json()
-
-            // DuckDuckGo returns an array where the second element contains the suggestions
-            const suggestionList = Array.isArray(data) && data.length > 1 ? data[1] : []
-
-            const suggestions: SearchSuggestion[] = suggestionList
-                .slice(0, 4) // Limit to 4 suggestions
-                .map((suggestion: string, index: number) => ({
-                    id: `suggestion-${index}`,
-                    query: suggestion,
-                    type: "suggestion" as const,
-                }))
-
-            setSearchSuggestions(suggestions)
-        } catch (error) {
-            console.error("Error fetching suggestions:", error)
-
-            // Fallback to a simple local suggestion system if DuckDuckGo fails
-            const fallbackSuggestions = generateFallbackSuggestions(query)
-            setSearchSuggestions(fallbackSuggestions)
-        } finally {
-            setIsLoadingSuggestions(false)
-        }
-    }, [])
-
-    // Fallback suggestion generator for when API fails
-    const generateFallbackSuggestions = (query: string): SearchSuggestion[] => {
-        const commonSuggestions = [`${query} tutorial`, `${query} guide`, `how to ${query}`, `${query} examples`]
-
-        return commonSuggestions.slice(0, 4).map((suggestion, index) => ({
-            id: `fallback-${index}`,
-            query: suggestion,
-            type: "suggestion" as const,
-        }))
-    }
-
-    // Debounced search suggestions
+    // Cmd/Ctrl + K toggle and Esc close
     useEffect(() => {
-        const timeoutId = setTimeout(() => {
-            if (searchValue.trim() && !calculationResult) {
-                fetchSearchSuggestions(searchValue)
-            } else {
-                setSearchSuggestions([])
+        const down = (e: KeyboardEvent) => {
+            if (e.key.toLowerCase() === "k" && (e.metaKey || e.ctrlKey)) {
+                e.preventDefault()
+                setIsExpanded((prev) => !prev)
+                setTimeout(() => inputRef.current?.focus(), 40)
             }
-        }, 300)
-
-        return () => clearTimeout(timeoutId)
-    }, [searchValue, calculationResult, fetchSearchSuggestions])
-
-    // Handle search execution
-    const executeSearch = (value: string) => {
-        const trimmedValue = value.trim()
-
-        if (isValidUrl(trimmedValue)) {
-            const url = trimmedValue.includes("://") ? trimmedValue : `https://${trimmedValue}`
-            window.open(url, "_blank")
-        } else {
-            console.log(trimmedValue)
-            handleSearch(trimmedValue)
+            if (e.key === "Escape" && isExpanded) {
+                e.preventDefault()
+                closeSearch()
+            }
         }
+        document.addEventListener("keydown", down)
+        return () => document.removeEventListener("keydown", down)
+    }, [isExpanded])
 
-        closeDialog()
-    }
-
-    // Close dialog and reset states
-    const closeDialog = () => {
-        setIsExpanded(false)
-        setSelectedItemIndex(-1)
-        setIsNavigatingTabs(false)
-        setIsFocusedOnSearch(false)
-    }
-
-    // Update calculation result when search value changes
+    // Type-to-open: open and insert first character when typing anywhere (except inputs)
     useEffect(() => {
-        if (searchValue.trim()) {
-            const result = calculateExpression(searchValue)
-            setCalculationResult(result)
-        } else {
-            setCalculationResult(null)
+        const isEditable = (el: EventTarget | null) => {
+            const node = el as HTMLElement | null
+            if (!node) return false
+            const tag = node.tagName?.toLowerCase()
+            if (tag === "input" || tag === "textarea" || tag === "select") return true
+            if (node.isContentEditable) return true
+            return false
         }
-    }, [searchValue])
 
-    // Handle search input focus (opens dialog)
-    const handleSearchFocus = () => {
-        setIsExpanded(true)
-        setSelectedItemIndex(-1)
-        setIsNavigatingTabs(false)
-        setIsFocusedOnSearch(true)
-        // Focus the dialog search input after a brief delay
-        setTimeout(() => {
-            dialogSearchInputRef.current?.focus()
-        }, 100)
-    }
+        const onKeydown = (e: KeyboardEvent) => {
+            if (isExpanded) return
+            if (e.metaKey || e.ctrlKey || e.altKey) return
+            if (isEditable(e.target)) return
 
-    // Handle search input change
-    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSearchValue(e.target.value)
-        // Ensure we're in search input mode when typing
-        setIsFocusedOnSearch(true)
-    }
-
-    // Get current tab items or all items for "All" tab
-    const getCurrentTabItems = (): AllTabItem[] => {
-        if (selectedTabIndex === 0) {
-            // "All" tab - combine suggestions and all items grouped by category
-            const allItems: AllTabItem[] = []
-
-            // Add search suggestions first
-            if (searchSuggestions.length > 0) {
-                searchSuggestions.forEach((suggestion) => {
-                    allItems.push({
-                        type: "suggestion",
-                        id: suggestion.id,
-                        label: suggestion.query,
-                        icon: <Search className="w-4 h-4" />,
-                        action: () => executeSearch(suggestion.query),
-                    })
-                })
+            if (e.key.length === 1) {
+                setIsExpanded(true)
+                setSearch(e.key)
+                requestAnimationFrame(() => inputRef.current?.focus())
+            } else if (e.key === "Backspace") {
+                setIsExpanded(true)
+                setSearch("")
+                requestAnimationFrame(() => inputRef.current?.focus())
             }
-
-            // Add all items grouped by category
-            baseTabs.forEach((tab) => {
-                // Add category header
-                allItems.push({
-                    type: "category",
-                    id: `category-${tab.id}`,
-                    label: tab.label,
-                    category: tab.label,
-                })
-
-                // Add items from this category
-                tab.items.forEach((item) => {
-                    allItems.push({
-                        type: "item" as const,
-                        id: item.id,
-                        label: item.label,
-                        icon: item.icon,
-                        action: item.action,
-                        category: tab.label,
-                    })
-                })
-            })
-
-            return allItems
-        } else {
-            // Regular tab - convert to AllTabItem format
-            const currentTab = baseTabs[selectedTabIndex - 1]
-            return (
-                currentTab?.items.map((item) => ({
-                    type: "item" as const,
-                    id: item.id,
-                    label: item.label,
-                    icon: item.icon,
-                    action: item.action,
-                    category: item.category,
-                })) || []
-            )
         }
-    }
 
-    const currentTabItems = getCurrentTabItems()
+        document.addEventListener("keydown", onKeydown)
+        return () => document.removeEventListener("keydown", onKeydown)
+    }, [isExpanded])
 
-    // Handle keyboard navigation
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (!isExpanded) return
-
-        switch (e.key) {
-            case "Escape":
-                closeDialog()
-                break
-
-            case "ArrowLeft":
-                // Only prevent default and handle tab switching if NOT focused on search input
-                if (!isFocusedOnSearch && (isNavigatingTabs || selectedItemIndex === -1)) {
-                    e.preventDefault()
-                    setIsNavigatingTabs(true)
-                    if (selectedTabIndex > 0) {
-                        setSelectedTabIndex(selectedTabIndex - 1)
-                        setSelectedItemIndex(-1)
-                    }
-                }
-                // If focused on search input, let the default behavior handle cursor movement
-                break
-
-            case "ArrowRight":
-                // Only prevent default and handle tab switching if NOT focused on search input
-                if (!isFocusedOnSearch && (isNavigatingTabs || selectedItemIndex === -1)) {
-                    e.preventDefault()
-                    setIsNavigatingTabs(true)
-                    if (selectedTabIndex < tabs.length - 1) {
-                        setSelectedTabIndex(selectedTabIndex + 1)
-                        setSelectedItemIndex(-1)
-                    }
-                }
-                // If focused on search input, let the default behavior handle cursor movement
-                break
-
-            case "ArrowDown":
-                e.preventDefault()
-                if (isFocusedOnSearch) {
-                    // Move from search input to tabs
-                    setIsFocusedOnSearch(false)
-                    setIsNavigatingTabs(true)
-                    setSelectedItemIndex(-1)
-                    tabsRef.current[selectedTabIndex]?.focus()
-                } else if (isNavigatingTabs) {
-                    // Move from tabs to menu items
-                    setIsNavigatingTabs(false)
-                    setSelectedItemIndex(0)
-                    menuItemsRef.current[0]?.focus()
-                } else {
-                    // Navigate through menu items (skip category headers)
-                    let nextIndex = selectedItemIndex + 1
-                    while (nextIndex < currentTabItems.length && currentTabItems[nextIndex].type === "category") {
-                        nextIndex++
-                    }
-                    if (nextIndex < currentTabItems.length) {
-                        setSelectedItemIndex(nextIndex)
-                        menuItemsRef.current[nextIndex]?.focus()
-                    }
-                }
-                break
-
-            case "ArrowUp":
-                e.preventDefault()
-                if (selectedItemIndex > 0) {
-                    // Find previous navigable item (skip category headers)
-                    let prevIndex = selectedItemIndex - 1
-                    while (prevIndex >= 0 && currentTabItems[prevIndex].type === "category") {
-                        prevIndex--
-                    }
-                    if (prevIndex >= 0) {
-                        setSelectedItemIndex(prevIndex)
-                        menuItemsRef.current[prevIndex]?.focus()
-                    } else {
-                        // Go to tabs
-                        setSelectedItemIndex(-1)
-                        setIsNavigatingTabs(true)
-                        tabsRef.current[selectedTabIndex]?.focus()
-                    }
-                } else if (selectedItemIndex === 0) {
-                    // Go to tabs
-                    setSelectedItemIndex(-1)
-                    setIsNavigatingTabs(true)
-                    tabsRef.current[selectedTabIndex]?.focus()
-                } else if (isNavigatingTabs) {
-                    // Go to search input from tabs
-                    setIsNavigatingTabs(false)
-                    setIsFocusedOnSearch(true)
-                    dialogSearchInputRef.current?.focus()
-                } else if (selectedItemIndex === -1 && !isNavigatingTabs && !isFocusedOnSearch) {
-                    // Go to search input
-                    setIsFocusedOnSearch(true)
-                    dialogSearchInputRef.current?.focus()
-                }
-                break
-
-            case "Tab":
-                e.preventDefault()
-                if (isFocusedOnSearch) {
-                    // Move from search input to tabs
-                    setIsFocusedOnSearch(false)
-                    setIsNavigatingTabs(true)
-                    setSelectedItemIndex(-1)
-                    tabsRef.current[selectedTabIndex]?.focus()
-                } else if (!isNavigatingTabs) {
-                    // Move to tabs
-                    setIsNavigatingTabs(true)
-                    setSelectedItemIndex(-1)
-                    tabsRef.current[selectedTabIndex]?.focus()
-                } else {
-                    // If already in tabs, go to first menu item
-                    setIsNavigatingTabs(false)
-                    setSelectedItemIndex(0)
-                    menuItemsRef.current[0]?.focus()
-                }
-                break
-
-            case "Enter":
-                e.preventDefault()
-                if (selectedItemIndex >= 0 && selectedItemIndex < currentTabItems.length) {
-                    const selectedItem = currentTabItems[selectedItemIndex]
-                    if (selectedItem.action && selectedItem.type !== "category") {
-                        selectedItem.action()
-                        closeDialog()
-                    }
-                } else if (calculationResult && isFocusedOnSearch) {
-                    navigator.clipboard.writeText(calculationResult)
-                    closeDialog()
-                } else if (searchValue.trim() && isFocusedOnSearch) {
-                    // Execute search or open URL when Enter is pressed on search input
-                    executeSearch(searchValue)
-                }
-                break
-        }
-    }
-
-    // Handle click outside dialog to close
+    // Focus input when expanded
     useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (isExpanded && dialogRef.current && !dialogRef.current.contains(event.target as Node)) {
-                closeDialog()
-            }
-        }
-
         if (isExpanded) {
-            document.addEventListener("mousedown", handleClickOutside)
-        }
-
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside)
+            const t = setTimeout(() => inputRef.current?.focus(), 50)
+            return () => clearTimeout(t)
         }
     }, [isExpanded])
 
-    // Handle menu item click
-    const handleMenuItemClick = (item: AllTabItem, index: number) => {
-        if (item.action && item.type !== "category") {
-            setSelectedItemIndex(index)
-            item.action()
-            closeDialog()
+    // Click outside to close
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (isExpanded && containerRef.current && !containerRef.current.contains(event.target as Node)) {
+                closeSearch()
+            }
+        }
+        if (isExpanded) document.addEventListener("mousedown", handleClickOutside)
+        return () => document.removeEventListener("mousedown", handleClickOutside)
+    }, [isExpanded])
+
+    // Suggestions (debounced)
+    useEffect(() => {
+        const id = setTimeout(async () => {
+            if (search.trim() && !calculationResult && !isUrl && isExpanded) {
+                setIsLoadingSuggestions(true)
+                const results = await fetchSearchSuggestions(search)
+                setSuggestions(results)
+                setIsLoadingSuggestions(false)
+            } else {
+                setSuggestions([])
+            }
+        }, 260)
+        return () => clearTimeout(id)
+    }, [search, calculationResult, isUrl, isExpanded])
+
+    const handleExecuteSearch = useCallback(
+        async (value: string) => {
+            await executeSearch(value)
+            closeSearch()
+        },
+        []
+    )
+
+    const handleItemSelect = useCallback((callback: () => void) => {
+        callback()
+        closeSearch()
+    }, [])
+
+    const closeSearch = useCallback(() => {
+        setIsExpanded(false)
+        setSearch("")
+        setSuggestions([])
+    }, [])
+
+    const filteredItems =
+        selectedCategory === "All"
+            ? MENU_ITEMS
+            : MENU_ITEMS.filter((item) => item.category === selectedCategory)
+
+    // Left/Right category switching when NOT in the input
+    const handleRootKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+        const isInput = (e.target as HTMLElement)?.getAttribute("cmdk-input") !== null
+        if (!isInput && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
+            e.preventDefault()
+            const idx = tabs.indexOf(selectedCategory)
+            if (e.key === "ArrowLeft") {
+                setSelectedCategory(tabs[Math.max(0, idx - 1)])
+            } else {
+                setSelectedCategory(tabs[Math.min(tabs.length - 1, idx + 1)])
+            }
         }
     }
 
-    // Handle menu item hover
-    const handleMenuItemHover = (index: number) => {
-        if (currentTabItems[index].type !== "category") {
-            setSelectedItemIndex(index)
-            setIsNavigatingTabs(false)
-            setIsFocusedOnSearch(false)
-        }
-    }
+    // Quick actions always first so Enter has a good default
+    const quickActions = useMemo(() => {
+        if (!search.trim()) return []
+        const items: {
+            id: string
+            label: string
+            icon: React.ReactNode
+            onSelect: () => void
+            value: string
+            keywords?: string[]
+        }[] = []
 
-    // Handle tab click
-    const handleTabClick = (index: number) => {
-        setSelectedTabIndex(index)
-        setSelectedItemIndex(-1)
-        setIsNavigatingTabs(true)
-        setIsFocusedOnSearch(false)
-    }
+        if (calculationResult) {
+            items.push({
+                id: "qa-copy",
+                label: `Copy result: ${calculationResult}`,
+                icon: <Calculator className="w-4 h-4 text-primary" />,
+                onSelect: () => {
+                    navigator.clipboard.writeText(calculationResult)
+                },
+                value: `copy result ${calculationResult}`,
+                keywords: ["copy", "result", "calc", "calculator"],
+            })
+        }
+
+        if (isUrl) {
+            const target = search.includes("://") ? search : `https://${search}`
+            items.push({
+                id: "qa-open-url",
+                label: `Open ${target}`,
+                icon: <LinkIcon className="w-4 h-4 text-green-600" />,
+                onSelect: () => window.open(target, "_blank"),
+                value: `open url ${target}`,
+                keywords: ["open", "url", "link"],
+            })
+        }
+
+        // Default search
+        items.push({
+            id: "qa-search",
+            label: `Search “${search.trim()}”`,
+            icon: <Search className="w-4 h-4" />,
+            onSelect: () => handleExecuteSearch(search),
+            value: `search ${search.trim()}`,
+            keywords: ["search", "query"],
+        })
+
+        return items
+    }, [calculationResult, handleExecuteSearch, isUrl, search])
 
     return (
-        <div className=" flex items-center justify-center p-4 transition-colors">
+        <>
+            {/* Backdrop Overlay */}
+            <AnimatePresence>
+                {isExpanded && (
+                    <motion.div
+                        key="overlay"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.12 }}
+                        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+                        onClick={closeSearch}
+                    />
+                )}
+            </AnimatePresence>
 
-            {/* Main Search Box */}
-            <div ref={containerRef} className="w-full max-w-2xl 2xl:max-w-3xl">
-                <TrialRemaining />
-                <div className="bg-card border rounded-xl shadow-md hover:shadow-lg transition-all duration-300 ease-out">
-                    <div className="relative">
-                        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                        <input
-                            ref={searchInputRef}
-                            type="text"
-                            value=""
-                            onFocus={handleSearchFocus}
-                            placeholder="Search or calculate..."
-                            className="w-full pl-12 pr-4 py-4 text-lg bg-transparent border-none outline-none rounded-xl text-foreground placeholder:text-muted-foreground cursor-pointer"
-                            readOnly
-                        />
-                    </div>
+            {/* Center horizontally wherever placed */}
+            <div className="w-full px-4">
+                <div
+                    ref={containerRef}
+                    className="relative mx-auto w-full max-w-3xl 2xl:max-w-4xl"
+                    onKeyDown={handleRootKeyDown}
+                >
+                    <Command className="bg-card border rounded-2xl shadow-2xl overflow-hidden">
+                        {/* Always show TrialRemaining above the search */}
+                        <div className="px-4 pt-3">
+                            <TrialRemaining />
+                        </div>
+
+                        {/* Input Row */}
+                        <div className="relative border-t border-b border-border/50">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5 pointer-events-none" />
+                            <Command.Input
+                                ref={inputRef}
+                                value={search}
+                                onValueChange={(v) => {
+                                    setSearch(v)
+                                    if (!isExpanded) setIsExpanded(true)
+                                }}
+                                onFocus={() => setIsExpanded(true)}
+                                placeholder="Search or calculate..."
+                                // Important: do NOT intercept Enter here; cmdk will execute the selected item
+                                className="w-full pl-12 pr-12 py-4 text-lg bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground"
+                            />
+                            <AnimatePresence initial={false}>
+                                {isExpanded && (
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.92 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.92 }}
+                                        transition={{ duration: 0.1 }}
+                                        className="absolute right-2 top-2 -translate-y-1/2"
+                                    >
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={closeSearch}
+                                            className="h-8 w-8"
+                                            aria-label="Close"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+
+                        {/* Expandable content */}
+                        <AnimatePresence>
+                            {isExpanded && (
+                                <motion.div
+                                    key="content"
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: "auto", opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    transition={{
+                                        height: { type: "spring", damping: 26, stiffness: 360 },
+                                        opacity: { duration: 0.12 },
+                                    }}
+                                    className="overflow-hidden"
+                                >
+                                    {/* Calculator banner */}
+                                    {calculationResult && (
+                                        <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.12 }}>
+                                            <div className="px-4 py-3 border-b bg-gradient-to-r from-primary/10 to-primary/5">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-3">
+                                                        <Calculator className="w-4 h-4 text-primary" />
+                                                        <span className="text-sm text-muted-foreground">Result:</span>
+                                                        <span className="font-mono text-lg font-semibold text-primary">{calculationResult}</span>
+                                                    </div>
+                                                    <span className="text-xs text-muted-foreground">Enter runs selected item</span>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    )}
+
+                                    {/* URL banner */}
+                                    {isUrl && (
+                                        <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.12 }}>
+                                            <div className="px-4 py-3 border-b bg-gradient-to-r from-emerald-500/10 to-green-500/5">
+                                                <div className="flex items-center gap-3">
+                                                    <span className="text-green-600 dark:text-green-400">🌐</span>
+                                                    <span className="text-sm text-green-700 dark:text-green-300">
+                                                        Enter will open the selected action (e.g., Open URL)
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    )}
+
+                                    {/* Tabs (wrapped in ScrollArea for horizontal overflow) */}
+                                    <div className="border-b bg-muted/30">
+                                        <ScrollArea className="w-full">
+                                            <div className="px-4 py-3 flex gap-2">
+                                                {tabs.map((cat, i) => (
+                                                    <motion.button
+                                                        key={cat}
+                                                        initial={{ opacity: 0, x: -6 }}
+                                                        animate={{ opacity: 1, x: 0 }}
+                                                        transition={{ delay: i * 0.02, duration: 0.1 }}
+                                                        onClick={() => setSelectedCategory(cat)}
+                                                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${selectedCategory === cat
+                                                            ? "bg-primary text-primary-foreground shadow"
+                                                            : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                                                            }`}
+                                                    >
+                                                        {cat}
+                                                    </motion.button>
+                                                ))}
+                                            </div>
+                                            <ScrollBar orientation="horizontal" />
+                                        </ScrollArea>
+                                    </div>
+
+                                    {/* Content list with shadcn ScrollArea */}
+                                    <ScrollArea className="max-h-[50vh]">
+                                        <div className="p-2">
+                                            <Command.List>
+                                                <Command.Empty>
+                                                    <div className="py-12 text-center">
+                                                        <Search className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
+                                                        <p className="text-muted-foreground">No results found.</p>
+                                                    </div>
+                                                </Command.Empty>
+
+                                                {/* Quick actions */}
+                                                {search.trim() && (
+                                                    <Command.Group heading="Quick actions">
+                                                        {quickActions.map((qa, index) => (
+                                                            <motion.div
+                                                                key={qa.id}
+                                                                initial={{ opacity: 0, x: -12 }}
+                                                                animate={{ opacity: 1, x: 0 }}
+                                                                transition={{ delay: index * 0.02, duration: 0.1 }}
+                                                            >
+                                                                <Command.Item
+                                                                    value={qa.value}
+                                                                    keywords={qa.keywords}
+                                                                    onSelect={() => {
+                                                                        qa.onSelect()
+                                                                        closeSearch()
+                                                                    }}
+                                                                    className="flex items-center gap-3 px-4 py-3 rounded-lg data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground cursor-pointer"
+                                                                >
+                                                                    <span className="text-muted-foreground">{qa.icon}</span>
+                                                                    <span className="flex-1">{qa.label}</span>
+                                                                </Command.Item>
+                                                            </motion.div>
+                                                        ))}
+                                                    </Command.Group>
+                                                )}
+
+                                                {/* Suggestions loading skeleton */}
+                                                {isLoadingSuggestions && (
+                                                    <Command.Loading>
+                                                        <div className="px-4 py-2">
+                                                            <div className="space-y-2">
+                                                                {Array.from({ length: 4 }).map((_, i) => (
+                                                                    <div key={`sk-${i}`} className="flex items-center gap-3">
+                                                                        <Skeleton className="h-4 w-4 rounded" />
+                                                                        <Skeleton className="h-4 w-48" />
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    </Command.Loading>
+                                                )}
+
+                                                {/* Search Suggestions */}
+                                                {!isLoadingSuggestions && suggestions.length > 0 && (
+                                                    <Command.Group heading="Search Suggestions">
+                                                        {suggestions.map((s, index) => (
+                                                            <motion.div
+                                                                key={`sugg-${index}`}
+                                                                initial={{ opacity: 0, x: -12 }}
+                                                                animate={{ opacity: 1, x: 0 }}
+                                                                transition={{ delay: index * 0.02, duration: 0.1 }}
+                                                            >
+                                                                <Command.Item
+                                                                    value={s}
+                                                                    onSelect={() => handleExecuteSearch(s)}
+                                                                    className="flex items-center gap-3 px-4 py-3 rounded-lg data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground cursor-pointer"
+                                                                >
+                                                                    <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                                                                    <span className="flex-1">{s}</span>
+                                                                    <span className="text-xs text-muted-foreground">Search</span>
+                                                                </Command.Item>
+                                                            </motion.div>
+                                                        ))}
+                                                    </Command.Group>
+                                                )}
+
+                                                {/* Menu Items */}
+                                                {selectedCategory === "All"
+                                                    ? tabs
+                                                        .filter((c) => c !== "All")
+                                                        .map((cat) => {
+                                                            const items = MENU_ITEMS.filter((it) => it.category === cat)
+                                                            if (items.length === 0) return null
+                                                            return (
+                                                                <Command.Group key={cat} heading={cat}>
+                                                                    {items.map((item, index) => (
+                                                                        <CommandMenuItem
+                                                                            key={item.id}
+                                                                            item={item}
+                                                                            index={index}
+                                                                            onSelect={handleItemSelect}
+                                                                        />
+                                                                    ))}
+                                                                </Command.Group>
+                                                            )
+                                                        })
+                                                    : (
+                                                        <Command.Group heading={selectedCategory}>
+                                                            {filteredItems.map((item, index) => (
+                                                                <CommandMenuItem
+                                                                    key={item.id}
+                                                                    item={item}
+                                                                    index={index}
+                                                                    onSelect={handleItemSelect}
+                                                                />
+                                                            ))}
+                                                        </Command.Group>
+                                                    )}
+                                            </Command.List>
+                                        </div>
+
+                                        <ScrollBar orientation="vertical" />
+                                    </ScrollArea>
+
+                                    {/* Footer / shortcuts */}
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ duration: 0.12 }}
+                                        className="border-t px-4 py-2.5 bg-muted/30 flex justify-between items-center text-xs text-muted-foreground"
+                                    >
+                                        <div className="flex items-center gap-1.5">
+                                            <SearchIcon className="h-4 w-4 text-emerald-500" />
+                                            <span className="font-medium">QuickPeek</span>
+                                        </div>
+                                        <div className="flex items-center gap-4">
+                                            <div className="flex items-center gap-1">
+                                                <ArrowUp className="w-3 h-3" />
+                                                <ArrowDown className="w-3 h-3" />
+                                                <span>Navigate</span>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <span>←→</span>
+                                                <span>Switch tabs (when list active)</span>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <CornerDownLeft className="w-3 h-3" />
+                                                <span>Enter to run</span>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <kbd className="px-1.5 py-0.5 bg-muted rounded border border-border">Esc</kbd>
+                                                <span>Close</span>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </Command>
                 </div>
             </div>
-
-            {/* Dialog Overlay */}
-            {isExpanded && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-start justify-center pt-[10vh]">
-                    <div
-                        ref={dialogRef}
-                        className="w-full max-w-3xl  2xl:max-w-4xl mx-4 bg-card border rounded-xl shadow-2xl animate-in fade-in-0 zoom-in-95 duration-200"
-                    >
-                        {/* Dialog Header with Search Input */}
-                        <div className="relative border-b">
-                            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                            <input
-                                ref={dialogSearchInputRef}
-                                type="text"
-                                value={searchValue}
-                                onChange={handleSearchChange}
-                                onKeyDown={handleKeyDown}
-                                placeholder="Search or calculate..."
-                                className="w-full pl-12 pr-12 py-4 text-lg bg-transparent border-none outline-none rounded-t-xl text-foreground placeholder:text-muted-foreground"
-                                autoFocus
-                            />
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={closeDialog}
-                                className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground"
-                            >
-                                <X className="h-4 w-4" />
-                            </Button>
-                        </div>
-
-                        {/* Dialog Content */}
-                        <div>
-                            {/* Calculator Result */}
-                            {calculationResult && (
-                                <div className="px-4 py-3 border-b bg-muted/50">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center space-x-3">
-                                            <Calculator className="w-4 h-4 text-primary" />
-                                            <span className="text-sm text-muted-foreground">Result:</span>
-                                            <span className="font-mono text-lg font-semibold text-primary">{calculationResult}</span>
-                                        </div>
-                                        <span className="text-xs text-muted-foreground">Press Enter to copy</span>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* URL Detection Hint */}
-                            {searchValue.trim() && isValidUrl(searchValue) && (
-                                <div className="px-4 py-3 border-b bg-green-50 dark:bg-green-950/20">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center space-x-3">
-                                            <div className="w-4 h-4 text-green-600 dark:text-green-400">🌐</div>
-                                            <span className="text-sm text-green-700 dark:text-green-300">
-                                                Press Enter to open: {searchValue.includes("://") ? searchValue : `https://${searchValue}`}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Tabs */}
-                            <div className="px-4 py-3 border-b bg-muted/30">
-                                <div className="flex space-x-2">
-                                    {tabs.map((tab, index) => (
-                                        <div
-                                            key={tab.id}
-                                            ref={(el) => (tabsRef.current[index] = el)}
-                                            tabIndex={-1}
-                                            onKeyDown={handleKeyDown}
-                                        >
-                                            <Badge
-                                                variant={selectedTabIndex === index ? "default" : "secondary"}
-                                                className={`cursor-pointer transition-all duration-150 ${selectedTabIndex === index && isNavigatingTabs
-                                                    ? "ring-2 ring-primary ring-offset-2 ring-offset-background"
-                                                    : ""
-                                                    }`}
-                                                onClick={() => handleTabClick(index)}
-                                            >
-                                                {tab.id === "all" && <Grid3X3 className="w-3 h-3 mr-1" />}
-                                                {tab.label}
-                                            </Badge>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Menu Items - Fixed Height with Scroll */}
-                            <div ref={menuContainerRef} className="max-h-64 overflow-y-auto">
-                                <div className="py-2">
-                                    {currentTabItems.map((item, index) => {
-                                        if (item.type === "category") {
-                                            return (
-                                                <div
-                                                    key={item.id}
-                                                    className="px-4 py-2 text-xs font-semibold text-muted-foreground bg-muted/20 border-b"
-                                                >
-                                                    {item.label}
-                                                </div>
-                                            )
-                                        }
-
-                                        return (
-                                            <div
-                                                key={item.id}
-                                                ref={(el) => (menuItemsRef.current[index] = el)}
-                                                tabIndex={-1}
-                                                className={`flex items-center space-x-3 px-4 py-3 cursor-pointer transition-colors duration-150 ${selectedItemIndex === index && !isNavigatingTabs && !isFocusedOnSearch
-                                                    ? "bg-accent text-accent-foreground"
-                                                    : "text-foreground hover:bg-accent/50"
-                                                    }`}
-                                                onClick={() => handleMenuItemClick(item, index)}
-                                                onMouseEnter={() => handleMenuItemHover(index)}
-                                                onKeyDown={handleKeyDown}
-                                            >
-                                                <div
-                                                    className={`${selectedItemIndex === index && !isNavigatingTabs && !isFocusedOnSearch
-                                                        ? "text-accent-foreground"
-                                                        : "text-muted-foreground"
-                                                        }`}
-                                                >
-                                                    {item.icon}
-                                                </div>
-                                                <span className="flex-1">{item.label}</span>
-                                                {item.type === "suggestion" && <span className="text-xs text-muted-foreground">Search</span>}
-                                            </div>
-                                        )
-                                    })}
-
-                                    {/* Loading suggestions in All tab */}
-                                    {selectedTabIndex === 0 && isLoadingSuggestions && (
-                                        <div className="px-4 py-2">
-                                            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                                                <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-                                                <span>Loading suggestions...</span>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Navigation Hints */}
-                            <div className=" border-t px-4 py-2 bg-muted/30 rounded-b-xl flex justify-between items-center">
-                                <div className="flex items-center">
-                                    <div>
-                                        <SearchIcon className="h-4 w-4 text-[#32cd32] fill-inherit"/>
-                                    </div>
-                                    <span className="">QuickPeek</span>
-
-                                </div>
-                                <div className="flex items-center justify-end space-x-4 text-xs text-muted-foreground">
-                                    <div className="flex items-center space-x-1">
-                                        <ArrowUp className="w-3 h-3" />
-                                        <ArrowDown className="w-3 h-3" />
-                                        <span>Navigate</span>
-                                    </div>
-                                    {!isFocusedOnSearch && (
-                                        <div className="flex items-center space-x-1">
-                                            <span>←→</span>
-                                            <span>Switch tabs</span>
-                                        </div>
-                                    )}
-                                    <div className="flex items-center space-x-1">
-                                        <CornerDownLeft className="w-3 h-3" />
-                                        <span>Select/Search</span>
-                                    </div>
-                                    <div className="flex items-center space-x-1">
-                                        <kbd className="px-1 py-0.5 text-xs bg-muted rounded">Tab</kbd>
-                                        <span>Focus tabs</span>
-                                    </div>
-                                    <div className="flex items-center space-x-1">
-                                        <kbd className="px-1 py-0.5 text-xs bg-muted rounded">Esc</kbd>
-                                        <span>Close</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
+        </>
     )
 }
 
+// Item
+function CommandMenuItem({
+    item,
+    index,
+    onSelect,
+}: {
+    item: typeof MENU_ITEMS[number]
+    index: number
+    onSelect: (callback: () => void) => void
+}) {
+    return (
+        <motion.div initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.02, duration: 0.1 }}>
+            <Command.Item
+                value={`${item.label} ${item.keywords?.join(" ") || ""}`}
+                keywords={item.keywords}
+                onSelect={() => onSelect(item.action)}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground cursor-pointer"
+            >
+                <div className="text-muted-foreground flex-shrink-0">{item.icon}</div>
+                <span className="flex-1">{item.label}</span>
+            </Command.Item>
+        </motion.div>
+    )
+}
