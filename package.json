@@ -2,7 +2,7 @@
   "name": "QuickPeek - Spotlight & Alfred like Search but for Browsers",
   "description": "Spotlight and Alfred like Search for Browsers",
   "private": true,
-  "version": "9.0.0",
+  "version": "10.0.0",
   "type": "module",
   "scripts": {
     "dev": "wxt",

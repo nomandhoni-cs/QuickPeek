@@ -1,6 +1,6 @@
 // App.tsx
 import { useEffect, useState } from "react";
-import ShortcutManager from "@/components/shortcut-manager-wxt";
+import ShortcutManager from "@/components/ShortcutManager";
 import ChromeTopSites from "@/components/ChromeTopSites";
 import SearchInterface from "@/components/SearchInterface";
 import {
@@ -73,7 +73,7 @@ const App = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.2 }}
-        className="w-full max-w-4xl px-4"
+        className="w-full  px-4"
       >
         <SearchInterface />
         <ChromeTopSites />
